@@ -1,0 +1,245 @@
+# ===========================================
+# 🚨 SENSITIVE DATA - CRITICAL TO IGNORE
+# ===========================================
+
+# Environment variables (contains API keys, secrets)
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Log files (contain user interactions, contact IDs, messages)
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ===========================================
+# 📁 BUILD ARTIFACTS & CACHE
+# ===========================================
+
+# Next.js build output
+.next/
+out/
+
+# Node.js dependencies
+node_modules/
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+.tsbuildinfo
+
+# Build directories
+build/
+dist/
+coverage/
+
+# ===========================================
+# 🖥️ SYSTEM & EDITOR FILES
+# ===========================================
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# ===========================================
+# 🔧 DEVELOPMENT & RUNTIME
+# ===========================================
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+lib-cov/
+
+# nyc test coverage
+.nyc_output/
+
+# Grunt intermediate storage
+.grunt/
+
+# Bower dependency directory
+bower_components/
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+.env.production
+
+# parcel-bundler cache
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# ===========================================
+# 🧪 TESTING & DEVELOPMENT FILES
+# ===========================================
+
+# Test files that might contain sensitive data
+test-env.ts
+*.test.local.*
+coverage/
+
+# Development scripts
+dev-scripts/
+scripts/dev/
+
+# Backup files
+*.backup
+*.bak
+*.orig
+
+# ===========================================
+# 📱 MOBILE & NATIVE
+# ===========================================
+
+# React Native
+.expo/
+.expo-shared/
+
+# ===========================================
+# ☁️ DEPLOYMENT & CI/CD
+# ===========================================
+
+# Vercel
+.vercel
+
+# Serverless directories
+.serverless/
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# ===========================================
+# 🔍 SECURITY & SENSITIVE PATTERNS
+# ===========================================
+
+# Potential security files
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Configuration files that might contain secrets
+config.production.json
+config.local.json
+
+# ===========================================
+# 📝 DOCUMENTATION ARTIFACTS
+# ===========================================
+
+# Generated documentation
+docs/build/
+.docusaurus/
+
+# ===========================================
+# 🎯 PROJECT-SPECIFIC EXCLUSIONS
+# ===========================================
+
+# Your specific development files that shouldn't be public
+chat-filtered.ts
+simple-test.ts
+non-strict-test.ts
+
+# Any personal notes or development files
+NOTES.md
+TODO.md
+PERSONAL.md 
