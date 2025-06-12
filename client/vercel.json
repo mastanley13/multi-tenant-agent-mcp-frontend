@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "regions": ["iad1"],
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 120
+    }
+  },
+  "build": {
+    "env": {
+      "NODE_VERSION": "20"
+    }
+  },
+  "env": {
+    "STREAMING_ENABLED": "true"
+  }
+} 
