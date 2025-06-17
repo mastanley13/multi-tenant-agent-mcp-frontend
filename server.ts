@@ -126,11 +126,10 @@ async function initializeGHLAgent(): Promise<void> {
 
 Always use real GHL data and provide specific, actionable responses optimized for a web chat interface!`,
       
-      model: 'gpt-4o',
+      model: 'o3-2025-04-16',
       tools: filteredTools,
       
       modelSettings: {
-        temperature: 0.7,
         maxTokens: 1500, // Shorter for chat interface
       }
     });

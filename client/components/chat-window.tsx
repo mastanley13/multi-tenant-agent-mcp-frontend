@@ -71,6 +71,17 @@ export function ChatWindow({
     setIsLoading(true)
     setStreamingMessage('')
 
+    // Add user message to UI immediately for new chats
+    const newUserMessage: Message = {
+      id: Date.now().toString(),
+      content: userMessage,
+      role: 'user',
+      createdAt: new Date().toISOString()
+    }
+    
+    // Always add user message to local state for immediate display
+    setMessages(prev => [...prev, newUserMessage])
+
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -107,8 +118,22 @@ export function ChatWindow({
               if (data === '[DONE]') {
                 setStreamingMessage('')
                 setIsLoading(false)
-                // Refresh messages to get the complete conversation
-                await fetchMessages()
+                
+                // Add final assistant message to local state
+                if (streamingContent.trim()) {
+                  const assistantMessage: Message = {
+                    id: (Date.now() + 1).toString(),
+                    content: streamingContent,
+                    role: 'assistant',
+                    createdAt: new Date().toISOString()
+                  }
+                  setMessages(prev => [...prev, assistantMessage])
+                }
+                
+                // Refresh messages to get the complete conversation (for persistence)
+                if (conversationId) {
+                  await fetchMessages()
+                }
                 return
               }
 
@@ -129,6 +154,9 @@ export function ChatWindow({
       console.error('Chat error:', error)
       setIsLoading(false)
       setStreamingMessage('')
+      
+      // Remove the user message on error
+      setMessages(prev => prev.filter(msg => msg.id !== newUserMessage.id))
     }
   }
 

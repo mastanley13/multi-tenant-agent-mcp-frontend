@@ -23,6 +23,8 @@ declare module "next-auth" {
     companyId?: string
     userId?: string
     planId?: string
+    userType?: string
+    approvedLocations?: string[]
   }
 }
 

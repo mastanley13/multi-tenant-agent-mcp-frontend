@@ -3,6 +3,8 @@ import OpenAI from 'openai'
 import { UserContext } from './auth'
 
 export function getOpenAIAgent(userCtx?: UserContext) {
+  console.log('[OPENAI DEBUG] Creating OpenAI agent, API key available:', !!process.env.OPENAI_API_KEY)
+  console.log('[OPENAI DEBUG] User context available:', !!userCtx)
 
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -33,6 +35,8 @@ export function getOpenAIAgent(userCtx?: UserContext) {
     }
   ] : []
 
+  console.log('[OPENAI DEBUG] Tools configured:', tools.length, 'tools')
+
   return {
     openai,
     model: 'gpt-4o',
@@ -43,7 +47,7 @@ export function getOpenAIAgent(userCtx?: UserContext) {
       temperature?: number
     }) {
       return await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model: 'gpt-4.1',
         messages,
         tools: tools.length > 0 ? tools : undefined,
         tool_choice: tools.length > 0 ? 'auto' : undefined,
@@ -54,15 +58,26 @@ export function getOpenAIAgent(userCtx?: UserContext) {
     },
 
     async createStreamingChatCompletion(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]) {
-      return await openai.chat.completions.create({
-        model: 'gpt-4o',
-        messages,
-        tools: tools.length > 0 ? tools : undefined,
-        tool_choice: tools.length > 0 ? 'auto' : undefined,
-        stream: true,
-        temperature: 0.7,
-        max_tokens: 4000,
-      })
+      console.log('[OPENAI DEBUG] Creating streaming completion with', messages.length, 'messages')
+      console.log('[OPENAI DEBUG] Model: gpt-4o, tools:', tools.length)
+      
+      try {
+        const stream = await openai.chat.completions.create({
+          model: 'gpt-4o',
+          messages,
+          tools: tools.length > 0 ? tools : undefined,
+          tool_choice: tools.length > 0 ? 'auto' : undefined,
+          stream: true,
+          temperature: 0.7,
+          max_tokens: 4000,
+        })
+        
+        console.log('[OPENAI DEBUG] Stream created successfully')
+        return stream
+      } catch (error) {
+        console.error('[OPENAI DEBUG] Failed to create stream:', error)
+        throw error
+      }
     },
 
     async getAvailableTools() {

@@ -103,7 +103,11 @@ export async function POST(request: NextRequest) {
 
     // Get OpenAI agent and create streaming completion
     const agent = getOpenAIAgent(userCtx)
+    console.log('[CHAT DEBUG] Created OpenAI agent, userCtx available:', !!userCtx)
+    console.log('[CHAT DEBUG] Prepared messages for OpenAI:', messages.length, 'messages')
+    
     const stream = await agent.createStreamingChatCompletion(messages)
+    console.log('[CHAT DEBUG] Created streaming completion')
 
     // Create readable stream for SSE
     const encoder = new TextEncoder()
@@ -111,18 +115,24 @@ export async function POST(request: NextRequest) {
 
     const readableStream = new ReadableStream({
       async start(controller) {
+        console.log('[CHAT DEBUG] Starting stream processing')
 
         // Process the stream
         try {
           let accumulatedToolCalls: any[] = []
+          let chunkCount = 0
           
           for await (const chunk of stream) {
+            chunkCount++
+            console.log('[CHAT DEBUG] Processing chunk', chunkCount, 'choices:', chunk.choices?.length)
+            
             const choice = chunk.choices?.[0]
             const delta = choice?.delta
             
             // Handle content
             const content = delta?.content || ''
             if (content) {
+              console.log('[CHAT DEBUG] Content chunk:', content.slice(0, 50) + '...')
               assistantMessage += content
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`))
             }
