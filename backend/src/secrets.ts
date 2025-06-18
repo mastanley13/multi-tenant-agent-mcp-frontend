@@ -1,4 +1,4 @@
-import { prisma } from '../../client/lib/prisma'
+import { prisma } from './prisma'
 
 export interface TenantSecrets {
   accessToken: string
