@@ -1,0 +1,29 @@
+version: '3.9'
+services:
+  backend:
+    build: .
+    container_name: ghl-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - GHL_BASE_URL=https://services.leadconnectorhq.com
+    networks:
+      - ghl-net
+
+  client:
+    build:
+      context: ./client
+    container_name: ghl-client
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_MCP_URL=http://localhost:3001
+    depends_on:
+      - backend
+    networks:
+      - ghl-net
+
+networks:
+  ghl-net:
+    driver: bridge 

@@ -200,6 +200,37 @@ export const authOptions: NextAuthOptions = {
             user.id = ghlUserId
           }
           
+          // --- A-4: Upsert TenantSecret row --------------------------------------------------
+          try {
+            if (account.access_token && account.locationId) {
+              await prisma.tenantSecret.upsert({
+                where: { tenantId: user.id },
+                update: {
+                  accessToken: account.access_token,
+                  refreshToken: account.refresh_token ?? undefined,
+                  expiresAt: account.expires_at ?? undefined,
+                  locationId: account.locationId,
+                  companyId: account.companyId ?? undefined,
+                  ghlUserId: account.providerAccountId ?? undefined,
+                  userType: account.userType ?? undefined,
+                },
+                create: {
+                  tenantId: user.id,
+                  accessToken: account.access_token,
+                  refreshToken: account.refresh_token ?? undefined,
+                  expiresAt: account.expires_at ?? undefined,
+                  locationId: account.locationId,
+                  companyId: account.companyId ?? undefined,
+                  ghlUserId: account.providerAccountId ?? undefined,
+                  userType: account.userType ?? undefined,
+                },
+              })
+              console.log('[AUTH DEBUG] TenantSecret upserted')
+            }
+          } catch (err) {
+            console.error('Failed to upsert TenantSecret:', err)
+          }
+          
           return true
         } catch (error) {
           console.error('Error in signIn callback:', error)
@@ -344,6 +375,29 @@ export async function getValidToken(userId: string): Promise<string | null> {
     })
 
     console.log('[AUTH DEBUG] Token refreshed successfully')
+
+    // ----------------- A-5: Sync token refresh into TenantSecret ------------------
+    // After refreshing, also sync TenantSecret (non-blocking)
+    try {
+      await prisma.tenantSecret.upsert({
+        where: { tenantId: account.userId || userId },
+        update: {
+          accessToken: access_token,
+          refreshToken: refresh_token || account.refresh_token,
+          expiresAt: newExpiresAt,
+        },
+        create: {
+          tenantId: account.userId || userId,
+          accessToken: access_token,
+          refreshToken: refresh_token || account.refresh_token,
+          expiresAt: newExpiresAt,
+          locationId: account.locationId ?? '',
+        },
+      })
+    } catch (err) {
+      console.error('Failed to sync TenantSecret:', err)
+    }
+
     return access_token
   } catch (error) {
     console.error('Token refresh failed:', error)

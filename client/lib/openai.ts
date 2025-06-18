@@ -39,7 +39,7 @@ export function getOpenAIAgent(userCtx?: UserContext) {
 
   return {
     openai,
-    model: 'gpt-4o',
+    model: 'o3-2025-04-16',
     userContext: userCtx,
     
     async createChatCompletion(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[], options?: {
@@ -47,13 +47,11 @@ export function getOpenAIAgent(userCtx?: UserContext) {
       temperature?: number
     }) {
       return await openai.chat.completions.create({
-        model: 'gpt-4.1',
+        model: 'o3-2025-04-16',
         messages,
         tools: tools.length > 0 ? tools : undefined,
         tool_choice: tools.length > 0 ? 'auto' : undefined,
         stream: options?.stream || false,
-        temperature: options?.temperature || 0.7,
-        max_tokens: 4000,
       })
     },
 
@@ -63,13 +61,11 @@ export function getOpenAIAgent(userCtx?: UserContext) {
       
       try {
         const stream = await openai.chat.completions.create({
-          model: 'gpt-4o',
+          model: 'o3-2025-04-16',
           messages,
           tools: tools.length > 0 ? tools : undefined,
           tool_choice: tools.length > 0 ? 'auto' : undefined,
           stream: true,
-          temperature: 0.7,
-          max_tokens: 4000,
         })
         
         console.log('[OPENAI DEBUG] Stream created successfully')
@@ -87,11 +83,13 @@ export function getOpenAIAgent(userCtx?: UserContext) {
       
       try {
         const tenantId = userCtx.id
-        const response = await fetch(`${process.env.MCP_SERVER_URL}/mcp/${tenantId}/tools`, {
+        const baseUrl = process.env.NEXT_PUBLIC_MCP_URL || process.env.MCP_SERVER_URL || 'http://localhost:3001'
+        const response = await fetch(`${baseUrl}/mcp/${tenantId}/tools`, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${userCtx.accessToken}`
-          }
+            'Authorization': `Bearer ${userCtx.accessToken}`,
+            'x-tenant-id': tenantId,
+          },
         })
         
         if (!response.ok) {
@@ -114,11 +112,13 @@ export function getOpenAIAgent(userCtx?: UserContext) {
       try {
         // Use the multi-tenant MCP server endpoint format
         const tenantId = userCtx.id // Use user ID as tenant ID
-        const response = await fetch(`${process.env.MCP_SERVER_URL}/mcp/${tenantId}/tool/${toolName}`, {
+        const baseUrl = process.env.NEXT_PUBLIC_MCP_URL || process.env.MCP_SERVER_URL || 'http://localhost:3001'
+        const response = await fetch(`${baseUrl}/mcp/${tenantId}/tool/${toolName}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${userCtx.accessToken}`
+            'Authorization': `Bearer ${userCtx.accessToken}`,
+            'x-tenant-id': tenantId,
           },
           body: JSON.stringify(parameters)
         })

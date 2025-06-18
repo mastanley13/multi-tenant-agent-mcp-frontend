@@ -6,30 +6,35 @@
   "main": "server.js",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "tsx watch server.ts",
+    "server": "tsx watch backend/src/index.ts",
+    "server:stub": "cross-env NODE_ENV=development tsx watch backend/src/index.ts",
     "client": "cd client && npm run dev",
     "build": "npm run build:server && npm run build:client",
-    "build:server": "tsx build server.ts",
+    "build:server": "tsx build backend/src/index.ts",
     "build:client": "cd client && npm run build",
     "start": "node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@openai/agents": "^0.0.6",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "socket.io": "^4.8.1",
-    "cors": "^2.8.5",
     "helmet": "^8.0.0",
-    "winston": "^3.17.0"
+    "socket.io": "^4.8.1",
+    "winston": "^3.17.0",
+    "@upstash/ratelimit": "^1.2.0",
+    "@upstash/redis": "^1.23.0",
+    "prom-client": "^15.0.1"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
-    "@types/express": "^5.0.0",
     "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.2",
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2",
-    "concurrently": "^9.1.0"
+    "typescript": "^5.7.2"
   },
   "keywords": [
     "gohighlevel",
@@ -40,4 +45,4 @@
   ],
   "author": "Your Name",
   "license": "MIT"
-} 
+}

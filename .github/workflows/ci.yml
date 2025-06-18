@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: [5432:5432]
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+      UPSTASH_REST_TOKEN: dummy
+      UPSTASH_REST_URL: https://localhost
+      NEXTAUTH_SECRET: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install deps
+        run: npm ci
+      - name: Lint & TypeCheck
+        run: |
+          npm run lint --if-present || echo 'no lint'
+          npx tsc --noEmit
+      - name: Run tests
+        run: npm test --workspaces -- --coverage
+      - name: Check coverage threshold
+        run: |
+          threshold=90
+          coverage=$(node -e "const c=require('./coverage/coverage-summary.json').total.lines.pct;console.log(c)")
+          if (( $(echo "$coverage < $threshold" | bc -l) )); then echo "Coverage $coverage% below $threshold%" && exit 1; fi
+      - name: E2E smoke
+        run: |
+          scripts/provision-prod.sh
+        env:
+          BACKEND_IMAGE: ghl/backend:latest
+          CLIENT_IMAGE: ghl/client:latest
+      - name: Token grep security check
+        run: scripts/grep-tokens.sh
+      - name: Non-root UID check
+        run: |
+          docker run --rm app-backend id -u | grep -vq '^0$'
+          docker run --rm app-client id -u | grep -vq '^0$'
+      - name: Build Docker images
+        run: |
+          docker build -t ghl/backend:latest .
+          docker build -t ghl/client:latest ./client 

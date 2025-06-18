@@ -1,0 +1,3 @@
+Well, I think it's important you somehow help me setup the mcp deployment correctly, so it doesn't depend on the configs it has, but the ones that are being passed. Basically, I want to deploy the MCP - and ensure that this application can communicate with it - then, I can deploy this as the SaaS.
+
+This means, I need to deploy on railway, but first - I need to ensure it's going to work with what this application sends it, and not the single secret vars we have there now
