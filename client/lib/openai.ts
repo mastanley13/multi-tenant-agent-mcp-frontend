@@ -55,24 +55,58 @@ export function getOpenAIAgent(userCtx?: UserContext) {
       })
     },
 
-    async createStreamingChatCompletion(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]) {
-      console.log('[OPENAI DEBUG] Creating streaming completion with', messages.length, 'messages')
-      console.log('[OPENAI DEBUG] Model: gpt-4o, tools:', tools.length)
-      
+    async createStreamingChatCompletion(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]): Promise<any> {
+      console.log('[PROXY DEBUG] Forwarding request to backend chat API for tenant:', this.userContext?.id);
+
+      if (!this.userContext?.id) {
+        // Fallback to basic OpenAI call if no tenant context is available
+        // This maintains the "basic chat" functionality when GHL is not connected
+        console.log('[PROXY DEBUG] No tenant context. Calling OpenAI directly.');
+        try {
+          const stream = await this.openai.chat.completions.create({
+            model: 'gpt-4.1',
+            messages,
+            stream: true,
+          });
+          return stream;
+        } catch (error) {
+          console.error('[OPENAI DEBUG] Failed to create stream:', error);
+          throw error;
+        }
+      }
+
+      // Proxy the request to the backend service
       try {
-        const stream = await openai.chat.completions.create({
-          model: 'o3-2025-04-16',
-          messages,
-          tools: tools.length > 0 ? tools : undefined,
-          tool_choice: tools.length > 0 ? 'auto' : undefined,
-          stream: true,
-        })
-        
-        console.log('[OPENAI DEBUG] Stream created successfully')
-        return stream
+        const response = await fetch('http://localhost:3001/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Tenant-ID': this.userContext.id,
+          },
+          // The backend expects a simple 'message' string, let's send the last user message.
+          // The backend will manage its own history/context.
+          body: JSON.stringify({ 
+            message: messages[messages.length - 1].content,
+            stream: true 
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`[PROXY DEBUG] Backend API error: ${response.status} ${errorText}`);
+          throw new Error(`Backend API request failed: ${response.status}`);
+        }
+
+        // The response body from the backend is already a stream of SSE events.
+        // We can return it directly.
+        if (!response.body) {
+          throw new Error('Backend response did not have a body');
+        }
+        return response.body;
+
       } catch (error) {
-        console.error('[OPENAI DEBUG] Failed to create stream:', error)
-        throw error
+        console.error('[PROXY DEBUG] Failed to proxy request to backend:', error);
+        throw error;
       }
     },
 

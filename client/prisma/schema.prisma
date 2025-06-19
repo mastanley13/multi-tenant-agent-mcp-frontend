@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
@@ -17,19 +14,18 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-  locationId        String? // GoHighLevel location ID
+  locationId        String?
   refreshTokenId    String?
-  userType          String? // GoHighLevel user type
-  companyId         String? // GoHighLevel company ID
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userType          String?
+  companyId         String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -43,18 +39,17 @@ model Session {
 }
 
 model User {
-  id            String    @id
+  id            String         @id
   name          String?
-  email         String?   @unique
+  email         String?        @unique
   emailVerified DateTime?
   image         String?
-  locationId    String?   // GoHighLevel location ID
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
+  locationId    String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   accounts      Account[]
-  sessions      Session[]
   conversations Conversation[]
+  sessions      Session[]
 }
 
 model VerificationToken {
@@ -66,39 +61,37 @@ model VerificationToken {
 }
 
 model Conversation {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   title     String?
   userId    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  Message[]
 
   @@index([userId])
 }
 
 model Message {
-  id             String   @id @default(cuid())
-  content        String   @db.Text
-  role           String   // 'user' | 'assistant' | 'system'
+  id             String       @id @default(cuid())
+  content        String
+  role           String
   conversationId String
-  createdAt      DateTime @default(now())
-
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId])
 }
 
 model TenantSecret {
-  tenantId        String @id // usually session.user.id or locationId
-  accessToken     String  @db.Text
-  refreshToken    String?  @db.Text
-  expiresAt       Int?
-  locationId      String
-  companyId       String?
-  ghlUserId       String?
-  userType        String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-} 
+  tenantId     String   @id
+  accessToken  String
+  locationId   String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  companyId    String?
+  expiresAt    Int?
+  ghlUserId    String?
+  refreshToken String?
+  userType     String?
+}

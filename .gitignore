@@ -10,6 +10,12 @@
 .env.test.local
 .env.production.local
 
+# OAuth & Authentication data (CRITICAL - contains tokens)
+Account*.json
+*oauth*.json
+*token*.json
+*credential*.json
+
 # Log files (contain user interactions, contact IDs, messages)
 *.log
 logs/
@@ -173,6 +179,11 @@ scripts/dev/
 *.backup
 *.bak
 *.orig
+
+# Test scripts and temporary files
+test-*.ps1
+test-*.sh
+*-test.*
 
 # ===========================================
 # 📱 MOBILE & NATIVE

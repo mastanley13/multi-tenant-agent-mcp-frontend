@@ -6,28 +6,31 @@
   "main": "server.js",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "tsx watch backend/src/index.ts",
+    "server": "tsx --require dotenv/config backend/src/index.ts",
     "server:stub": "cross-env NODE_ENV=development tsx watch backend/src/index.ts",
     "client": "cd client && npm run dev",
     "build": "npm run build:server && npm run build:client",
     "build:server": "tsx build backend/src/index.ts",
     "build:client": "cd client && npm run build",
-    "start": "node dist/server.js",
+    "start": "pnpm-sync && pnpm -r --parallel --stream start",
     "postinstall": "prisma generate --schema=./client/prisma/schema.prisma",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio",
+    "start-server": "node backend/dist/index.js"
   },
   "dependencies": {
     "@openai/agents": "^0.0.6",
+    "@prisma/client": "^5.8.0",
+    "@upstash/ratelimit": "^1.2.0",
+    "@upstash/redis": "^1.23.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "helmet": "^8.0.0",
-    "socket.io": "^4.8.1",
-    "winston": "^3.17.0",
-    "@upstash/ratelimit": "^1.2.0",
-    "@upstash/redis": "^1.23.0",
     "prom-client": "^15.0.1",
-    "@prisma/client": "^5.8.0"
+    "socket.io": "^4.8.1",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
@@ -35,9 +38,10 @@
     "@types/node": "^22.10.2",
     "concurrently": "^9.1.0",
     "cross-env": "^7.0.3",
+    "dotenv-cli": "^8.0.0",
+    "prisma": "^5.8.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2",
-    "prisma": "^5.8.0"
+    "typescript": "^5.7.2"
   },
   "keywords": [
     "gohighlevel",

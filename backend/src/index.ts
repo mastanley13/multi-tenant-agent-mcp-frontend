@@ -223,6 +223,104 @@ app.post('/tools/:toolName', asyncHandler(async (req, res) => {
   }
 }))
 
+// ---------- TENANT-SPECIFIC MCP ENDPOINTS (for frontend) ---------------
+
+// GET /api/mcp/:tenantId/tools - List tools for specific tenant
+app.get('/api/mcp/:tenantId/tools', asyncHandler(async (req, res) => {
+  try {
+    const { tenantId } = req.params
+    const agent = await getAgentForTenant(tenantId)
+
+    // Normalize the tools collection into an array
+    let toolsArray: any[] = []
+    const rawTools: any = (agent as any).tools
+    if (Array.isArray(rawTools)) {
+      toolsArray = rawTools
+    } else if (rawTools && typeof rawTools === 'object') {
+      if (rawTools instanceof Map) {
+        toolsArray = Array.from(rawTools.values())
+      } else if (rawTools instanceof Set) {
+        toolsArray = Array.from(rawTools)
+      } else {
+        toolsArray = Object.values(rawTools)
+      }
+    }
+
+    const toolsInfo = toolsArray.map((tool) => {
+      const parameters = (tool.inputSchema ?? tool.parameters) || undefined
+      return {
+        name: tool.name,
+        description: tool.description ?? tool.summary ?? undefined,
+        parameters,
+      }
+    })
+
+    res.json({
+      tools: toolsInfo,
+      count: toolsInfo.length,
+      tenantId,
+    })
+  } catch (error) {
+    logger.error(`Failed to get tools for tenant ${req.params.tenantId}`, error)
+    res.status(500).json({ error: 'Failed to get tools' })
+  }
+}))
+
+// POST /api/mcp/:tenantId/tools/:toolName - Execute tool for specific tenant
+app.post('/api/mcp/:tenantId/tools/:toolName', asyncHandler(async (req, res) => {
+  try {
+    const { tenantId, toolName } = req.params
+    const agent = await getAgentForTenant(tenantId)
+
+    // Normalize tools collection
+    let toolsArray: any[] = []
+    const rawTools: any = (agent as any).tools
+    if (Array.isArray(rawTools)) {
+      toolsArray = rawTools
+    } else if (rawTools && typeof rawTools === 'object') {
+      if (rawTools instanceof Map) {
+        toolsArray = Array.from(rawTools.values())
+      } else if (rawTools instanceof Set) {
+        toolsArray = Array.from(rawTools)
+      } else {
+        toolsArray = Object.values(rawTools)
+      }
+    }
+
+    const tool: any = toolsArray.find((t) => t.name === toolName)
+    if (!tool) {
+      return res.status(404).json({ error: `Tool '${toolName}' not found for tenant '${tenantId}'` })
+    }
+
+    // Execute the tool with different method signatures
+    let result: any
+    if (typeof tool.call === 'function') {
+      result = await tool.call(req.body)
+    } else if (typeof tool.invoke === 'function') {
+      result = await tool.invoke(req.body)
+    } else if (typeof tool.execute === 'function') {
+      result = await tool.execute(req.body)
+    } else if (typeof tool.run === 'function') {
+      result = await tool.run(req.body)
+    } else {
+      return res.status(500).json({ error: `Tool '${toolName}' does not expose an executable method` })
+    }
+
+    res.json({
+      tenantId,
+      toolName,
+      result,
+      timestamp: new Date().toISOString(),
+    })
+  } catch (error) {
+    logger.error(`Tool execution failed for ${req.params.toolName} (tenant: ${req.params.tenantId})`, error)
+    res.status(500).json({ error: 'Tool execution failed' })
+  } finally {
+    // Release the process after tool execution
+    releaseProcess(req.params.tenantId)
+  }
+}))
+
 // ---------- Socket.io chat ------------------------------------
 interface SessionInfo {
   history: AgentInputItem[]
@@ -277,6 +375,96 @@ io.on('connection', (socket) => {
     logger.info(`User ${userId} disconnected`)
   })
 })
+
+// ---------- NEW: REST Chat endpoint for frontend proxy -----------------
+app.post('/api/chat', asyncHandler(async (req, res) => {
+  const tenantId = (req.headers['x-tenant-id'] as string) ?? 'anonymous';
+  if (tenantId === 'anonymous') {
+    return res.status(400).json({ error: 'x-tenant-id header is required' });
+  }
+
+  const { message, stream = false } = req.body;
+  if (!message) {
+    return res.status(400).json({ error: 'message is required in the request body' });
+  }
+
+  try {
+    const agent = await getAgentForTenant(tenantId);
+    
+    // Convert the message string to the expected format for the agents library
+    const messages: AgentInputItem[] = [user(message)];
+    
+    if (stream) {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      });
+
+      const result = await run(agent, messages, { stream: true });
+      let responseContent = '';
+      
+      for await (const event of result) {
+        // Handle different event types based on the OpenAI agents library documentation
+        if ('type' in event) {
+          const eventType = event.type as string;
+          
+          // Handle run item events (messages, tool calls, etc)
+          if (eventType === 'run_item_stream_event') {
+            const item = (event as any).item;
+            if (item?.type === 'message_output_item' && item.content) {
+              // Extract text content from message
+              const textContent = typeof item.content === 'string' 
+                ? item.content 
+                : item.content?.text || '';
+              if (textContent) {
+                responseContent += textContent;
+                res.write(`data: ${JSON.stringify({ content: textContent })}\n\n`);
+              }
+            }
+          }
+          // Handle raw model stream events
+          else if (eventType === 'raw_model_stream_event') {
+            const data = (event as any).data;
+            // Check if it's a text delta event
+            if (data?.choices?.[0]?.delta?.content) {
+              const content = data.choices[0].delta.content;
+              responseContent += content;
+              res.write(`data: ${JSON.stringify({ content })}\n\n`);
+            }
+          }
+        }
+      }
+      
+      // Send done event
+      res.write(`data: [DONE]\n\n`);
+      res.end();
+
+    } else {
+      const result = await run(agent, messages);
+      res.json({
+        message: result.finalOutput || result.output || 'No response generated',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+  } catch (error) {
+    logger.error(`[CHAT API] Error for tenant ${tenantId}:`, error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        error: 'Internal server error',
+        details: errorMessage
+      });
+    } else {
+      res.write(`data: ${JSON.stringify({ type: 'error', error: errorMessage })}\n\n`);
+      res.end();
+    }
+  } finally {
+    // Release the process so it can be reaped if idle
+    releaseProcess(tenantId);
+  }
+}));
 
 // ---------- Server start --------------------------------------
 server.listen(PORT, () => {

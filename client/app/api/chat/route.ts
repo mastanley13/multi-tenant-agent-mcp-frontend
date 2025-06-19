@@ -109,6 +109,21 @@ export async function POST(request: NextRequest) {
     const stream = await agent.createStreamingChatCompletion(messages)
     console.log('[CHAT DEBUG] Created streaming completion')
 
+    // If the stream from the agent is a raw ReadableStream, pipe it directly.
+    // This happens when we are proxying to our backend.
+    if (stream instanceof ReadableStream) {
+      console.log('[CHAT DEBUG] Piping raw stream from backend proxy.');
+      return new Response(stream, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache, no-transform',
+          'Connection': 'keep-alive',
+          'X-Accel-Buffering': 'no',
+        }
+      });
+    }
+
     // Create readable stream for SSE
     const encoder = new TextEncoder()
     let assistantMessage = ''
