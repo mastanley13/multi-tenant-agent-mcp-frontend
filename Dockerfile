@@ -3,24 +3,24 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files for root dependencies
 COPY package*.json ./
-COPY backend/package*.json ./backend/
-COPY backend/mcp-src/package*.json ./backend/mcp-src/
 
 # Copy Prisma schema for client generation
 COPY client/prisma ./client/prisma
 
-# Install dependencies without running postinstall scripts
+# Install root dependencies without running postinstall scripts
 RUN npm install --ignore-scripts --omit=dev
 
 # Generate Prisma client
 RUN npx prisma generate --schema=./client/prisma/schema.prisma
 
-# Copy source code
-COPY backend ./backend
+# Copy backend source
+COPY backend/src ./backend/src
+COPY backend/package*.json ./backend/
 
-# Build MCP server
+# Build MCP server separately
+COPY backend/mcp-src ./backend/mcp-src
 WORKDIR /app/backend/mcp-src
 RUN npm ci && npm run build
 
@@ -52,5 +52,5 @@ ENV BACKEND_PORT=3001
 # Expose port
 EXPOSE 3001
 
-# Start the backend server
+# Start the backend server with tsx (no build needed)
 CMD ["npx", "tsx", "backend/src/index.ts"] 
