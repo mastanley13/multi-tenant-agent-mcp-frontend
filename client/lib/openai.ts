@@ -1,81 +1,132 @@
-import OpenAI from 'openai'
-
+import { z } from 'zod'
 import { UserContext } from './auth'
+
+// Conditional imports to prevent build-time initialization
+let Agent: any = null
+let run: any = null
+let tool: any = null
+
+async function initializeAgents() {
+  if (!Agent) {
+    const agentsModule = await import('@openai/agents')
+    Agent = agentsModule.Agent
+    run = agentsModule.run
+    tool = agentsModule.tool
+  }
+}
 
 export function getOpenAIAgent(userCtx?: UserContext) {
   console.log('[OPENAI DEBUG] Creating OpenAI agent, API key available:', !!process.env.OPENAI_API_KEY)
   console.log('[OPENAI DEBUG] User context available:', !!userCtx)
 
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  })
-
-  // Configure tools to call our MCP server (only if we have user context)
-  const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = userCtx?.accessToken ? [
-    {
-      type: 'function',
-      function: {
-        name: 'call_ghl_tool',
-        description: 'Call a GoHighLevel tool through the MCP server',
-        parameters: {
-          type: 'object',
-          properties: {
-            toolName: {
-              type: 'string',
-              description: 'The name of the GoHighLevel tool to call'
+  // Lazy agent creation function
+  const createAgent = async () => {
+    await initializeAgents()
+    
+    // Define GoHighLevel MCP tool if user has access token
+    const ghlMcpTool = userCtx?.accessToken ? tool({
+      name: 'call_ghl_tool',
+      description: 'Call a GoHighLevel tool through the MCP server',
+      parameters: z.object({
+        toolName: z.string().describe('The name of the GoHighLevel tool to call'),
+        parameters: z.object({}).optional().describe('Parameters to pass to the tool')
+      }),
+      execute: async ({ toolName, parameters = {} }: { toolName: string; parameters?: any }) => {
+        try {
+          const tenantId = userCtx.id
+          const response = await fetch(`/api/mcp/${tenantId}/tools/${toolName}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
             },
-            parameters: {
-              type: 'object',
-              description: 'Parameters to pass to the tool'
-            }
-          },
-          required: ['toolName']
+            body: JSON.stringify(parameters)
+          })
+
+          if (!response.ok) {
+            const errorText = await response.text()
+            throw new Error(`MCP tool call failed: ${response.status} ${errorText}`)
+          }
+
+          const result = await response.json()
+          return JSON.stringify(result)
+        } catch (error: any) {
+          console.error(`MCP tool call error for ${toolName}:`, error)
+          throw new Error(`Tool call failed: ${error?.message || 'Unknown error'}`)
         }
       }
-    }
-  ] : []
+    }) : null
 
-  console.log('[OPENAI DEBUG] Tools configured:', tools.length, 'tools')
+    return new Agent({
+      name: 'GoHighLevel Assistant',
+      instructions: userCtx?.accessToken 
+        ? 'You are a helpful assistant for GoHighLevel users. You can help manage contacts, opportunities, campaigns, and other CRM tasks using the available tools.'
+        : 'You are a helpful AI assistant. Note: GoHighLevel CRM tools are not currently available - please sign in with GoHighLevel OAuth to access CRM functionality.',
+      model: 'o3-2025-04-16',
+      tools: ghlMcpTool ? [ghlMcpTool] : []
+    })
+  }
+
+  console.log('[OPENAI DEBUG] Agent factory created with tools:', userCtx?.accessToken ? 1 : 0, 'tools')
 
   return {
-    openai,
-    model: 'o3-2025-04-16',
+    get agent() {
+      return createAgent()
+    },
     userContext: userCtx,
     
-    async createChatCompletion(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[], options?: {
+    async createChatCompletion(messages: any[], options?: {
       stream?: boolean
       temperature?: number
     }) {
-      return await openai.chat.completions.create({
-        model: 'o3-2025-04-16',
-        messages,
-        tools: tools.length > 0 ? tools : undefined,
-        tool_choice: tools.length > 0 ? 'auto' : undefined,
-        stream: options?.stream || false,
-      })
+      // Convert messages to simple prompt for Agent framework
+      const prompt = messages[messages.length - 1]?.content || ''
+      const agent = await createAgent()
+      await initializeAgents()
+      
+      // Handle streaming vs non-streaming explicitly
+      if (options?.stream) {
+        const result = await run(agent, prompt, { stream: true })
+        return {
+          choices: [{
+            message: {
+              content: '',
+              role: 'assistant'
+            }
+          }],
+          stream: result
+        }
+      } else {
+        const result = await run(agent, prompt)
+        return {
+          choices: [{
+            message: {
+              content: result.finalOutput,
+              role: 'assistant'
+            }
+          }]
+        }
+      }
     },
 
-    async createStreamingChatCompletion(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]): Promise<any> {
-      console.log('[PROXY DEBUG] Forwarding request to backend chat API for tenant:', this.userContext?.id);
+    async createStreamingChatCompletion(messages: any[]): Promise<any> {
+      console.log('[PROXY DEBUG] Creating streaming completion with OpenAI Agents framework for tenant:', this.userContext?.id);
 
       if (!this.userContext?.id) {
-        // Fallback to basic OpenAI call if no tenant context is available
-        // This maintains the "basic chat" functionality when GHL is not connected
-        console.log('[PROXY DEBUG] No tenant context. Calling OpenAI directly.');
+        // Fallback to basic agent call if no tenant context is available
+        console.log('[PROXY DEBUG] No tenant context. Using basic agent.');
         try {
-          const stream = await this.openai.chat.completions.create({
-            model: 'gpt-4.1',
-            messages,
-            stream: true,
-          });
-          return stream;
+          const prompt = messages[messages.length - 1]?.content || ''
+          const agent = await createAgent()
+          await initializeAgents()
+          const stream = run(agent, prompt, { stream: true })
+          return stream
         } catch (error) {
           console.error('[OPENAI DEBUG] Failed to create stream:', error);
           throw error;
         }
       }
 
-      // Proxy the request to the backend service
+      // For tenant users, proxy to backend service (which handles MCP integration)
       try {
         const response = await fetch('http://localhost:3001/api/chat', {
           method: 'POST',
@@ -83,8 +134,6 @@ export function getOpenAIAgent(userCtx?: UserContext) {
             'Content-Type': 'application/json',
             'X-Tenant-ID': this.userContext.id,
           },
-          // The backend expects a simple 'message' string, let's send the last user message.
-          // The backend will manage its own history/context.
           body: JSON.stringify({ 
             message: messages[messages.length - 1].content,
             stream: true 
@@ -97,8 +146,6 @@ export function getOpenAIAgent(userCtx?: UserContext) {
           throw new Error(`Backend API request failed: ${response.status}`);
         }
 
-        // The response body from the backend is already a stream of SSE events.
-        // We can return it directly.
         if (!response.body) {
           throw new Error('Backend response did not have a body');
         }

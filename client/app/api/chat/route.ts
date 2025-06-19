@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-
 import { prisma } from '@/lib/prisma'
 import { getUserContext } from '@/lib/auth'
 import { getOpenAIAgent } from '@/lib/openai'
@@ -81,39 +80,29 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Prepare messages for OpenAI
-    const systemMessage = userCtx?.accessToken 
-      ? 'You are a helpful assistant for GoHighLevel users. You can help manage contacts, opportunities, campaigns, and other CRM tasks using the available tools.'
-      : 'You are a helpful AI assistant. Note: GoHighLevel CRM tools are not currently available - please sign in with GoHighLevel OAuth to access CRM functionality.'
-      
-    const messages = [
-      {
-        role: 'system' as const,
-        content: systemMessage
-      },
-      ...conversation.messages.map(m => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content
-      })),
-      {
-        role: 'user' as const,
-        content: message
-      }
-    ]
-
-    // Get OpenAI agent and create streaming completion
-    const agent = getOpenAIAgent(userCtx)
+    // Get OpenAI agent instance
+    const agentInstance = getOpenAIAgent(userCtx)
     console.log('[CHAT DEBUG] Created OpenAI agent, userCtx available:', !!userCtx)
-    console.log('[CHAT DEBUG] Prepared messages for OpenAI:', messages.length, 'messages')
     
-    const stream = await agent.createStreamingChatCompletion(messages)
+    // Build conversation context for the agent
+    const conversationHistory = conversation.messages.map(m => `${m.role}: ${m.content}`).join('\n')
+    const contextualPrompt = conversationHistory 
+      ? `Previous conversation:\n${conversationHistory}\n\nUser: ${message}`
+      : message
+
+    console.log('[CHAT DEBUG] Prepared contextual prompt for agent')
+    
+    // Check if this is a streaming request or backend proxy
+    const streamFromBackend = await agentInstance.createStreamingChatCompletion([
+      { role: 'user', content: contextualPrompt }
+    ])
     console.log('[CHAT DEBUG] Created streaming completion')
 
     // If the stream from the agent is a raw ReadableStream, pipe it directly.
     // This happens when we are proxying to our backend.
-    if (stream instanceof ReadableStream) {
+    if (streamFromBackend instanceof ReadableStream) {
       console.log('[CHAT DEBUG] Piping raw stream from backend proxy.');
-      return new Response(stream, {
+      return new Response(streamFromBackend, {
         status: 200,
         headers: {
           'Content-Type': 'text/event-stream',
@@ -124,138 +113,113 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Create readable stream for SSE
+    // Handle streaming response from OpenAI Agents framework
     const encoder = new TextEncoder()
     let assistantMessage = ''
 
     const readableStream = new ReadableStream({
       async start(controller) {
-        console.log('[CHAT DEBUG] Starting stream processing')
+        console.log('[CHAT DEBUG] Starting Agent framework stream processing')
 
-        // Process the stream
         try {
-          let accumulatedToolCalls: any[] = []
-          let chunkCount = 0
-          
-          for await (const chunk of stream) {
-            chunkCount++
-            console.log('[CHAT DEBUG] Processing chunk', chunkCount, 'choices:', chunk.choices?.length)
-            
-            const choice = chunk.choices?.[0]
-            const delta = choice?.delta
-            
-            // Handle content
-            const content = delta?.content || ''
-            if (content) {
-              console.log('[CHAT DEBUG] Content chunk:', content.slice(0, 50) + '...')
-              assistantMessage += content
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`))
-            }
-
-            // Handle tool calls accumulation
-            if (delta?.tool_calls) {
-              for (const toolCall of delta.tool_calls) {
-                if (!accumulatedToolCalls[toolCall.index]) {
-                  accumulatedToolCalls[toolCall.index] = {
-                    id: toolCall.id,
-                    type: toolCall.type,
-                    function: { name: '', arguments: '' }
-                  }
-                }
-                
-                if (toolCall.function?.name) {
-                  accumulatedToolCalls[toolCall.index].function.name += toolCall.function.name
-                }
-                if (toolCall.function?.arguments) {
-                  accumulatedToolCalls[toolCall.index].function.arguments += toolCall.function.arguments
-                }
-              }
-            }
-
-            // Check if completion is finished
-            if (choice?.finish_reason) {
-              // If we have tool calls, execute them
-              if (accumulatedToolCalls.length > 0 && choice.finish_reason === 'tool_calls') {
-                try {
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ status: 'executing_tools' })}\n\n`))
-                  
-                  // Execute tool calls
-                  const toolResults = await agent.handleToolCalls(accumulatedToolCalls)
-                  
-                  // Create a new completion with tool results
-                  const followupMessages = [
-                    ...messages,
-                    {
-                      role: 'assistant' as const,
-                      content: null,
-                      tool_calls: accumulatedToolCalls
-                    },
-                    ...toolResults
-                  ]
-                  
-                  // Get follow-up response from OpenAI
-                  const followupStream = await agent.createStreamingChatCompletion(followupMessages)
-                  
-                  // Process the follow-up stream
-                  for await (const followupChunk of followupStream) {
-                    const followupContent = followupChunk.choices?.[0]?.delta?.content || ''
-                    if (followupContent) {
-                      assistantMessage += followupContent
-                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: followupContent })}\n\n`))
-                    }
-                    
-                    if (followupChunk.choices?.[0]?.finish_reason) {
-                      break
-                    }
-                  }
-                } catch (toolError: any) {
-                  console.error('Tool execution error:', toolError)
-                  const errorMessage = `\n\n[Tool execution failed: ${toolError?.message || 'Unknown error'}]`
-                  assistantMessage += errorMessage
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: errorMessage })}\n\n`))
-                }
-              }
+          // For non-backend cases, use the Agent framework directly
+          if (streamFromBackend && typeof streamFromBackend[Symbol.asyncIterator] === 'function') {
+            // Handle async iterable from Agent framework
+            for await (const chunk of streamFromBackend) {
+              console.log('[CHAT DEBUG] Received chunk:', chunk.type)
               
-              // Save assistant message
-              if (assistantMessage.trim()) {
-                prisma.message.create({
-                  data: {
-                    content: assistantMessage,
-                    role: 'assistant',
-                    conversationId: conversation.id
-                  }
-                }).catch(console.error) // Fire and forget
+              // Handle different chunk types from OpenAI Agents framework
+              if (chunk.type === 'run_item_stream_event' && chunk.data?.type === 'message' && chunk.data?.content) {
+                const content = chunk.data.content
+                assistantMessage += content
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`))
+              } else if (chunk.type === 'agent_updated_stream_event') {
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ status: 'agent_updated' })}\n\n`))
               }
-
-              controller.enqueue(encoder.encode(`data: [DONE]\n\n`))
-              controller.close()
-              break
             }
+          } else {
+            // Fallback: create a simple non-streaming response
+            const prompt = contextualPrompt
+            const agent = await agentInstance.agent
+            
+            // Import run function dynamically
+            const { run } = await import('@openai/agents')
+            const agentResult = await run(agent, prompt)
+
+            const finalOutput = agentResult?.finalOutput || 'No response generated'
+            assistantMessage = finalOutput
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: finalOutput })}\n\n`))
           }
+
+          // Save assistant message to database
+          if (assistantMessage) {
+            await prisma.message.create({
+              data: {
+                content: assistantMessage,
+                role: 'assistant',
+                conversationId: conversation.id
+              }
+            })
+          }
+
+          // Send completion signal
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+            status: 'completed',
+            conversationId: conversation.id 
+          })}\n\n`))
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+
         } catch (error) {
-          console.error('Stream processing error:', error)
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: 'Stream processing failed' })}\n\n`))
-          controller.close()
+          console.error('[CHAT DEBUG] Stream processing error:', error)
+          
+          // Try fallback: non-streaming response
+          try {
+            const prompt = contextualPrompt
+            const agent = await agentInstance.agent
+            const { run } = await import('@openai/agents')
+            const agentResult = await run(agent, prompt)
+            const finalOutput = agentResult?.finalOutput || 'I apologize, but I encountered an error processing your request.'
+            
+            assistantMessage = finalOutput
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: finalOutput })}\n\n`))
+            
+            // Save fallback message to database
+            await prisma.message.create({
+              data: {
+                content: assistantMessage,
+                role: 'assistant',
+                conversationId: conversation.id
+              }
+            })
+            
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+              status: 'completed',
+              conversationId: conversation.id 
+            })}\n\n`))
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+          } catch (fallbackError) {
+            console.error('[CHAT DEBUG] Fallback error:', fallbackError)
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+              error: 'An error occurred while processing your request.' 
+            })}\n\n`))
+          }
         }
+
+        controller.close()
       }
     })
 
     return new Response(readableStream, {
-      status: 200,
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'X-Accel-Buffering': 'no',
-        ...createRateLimitHeaders(rateLimitResult)
       }
     })
 
   } catch (error) {
-    console.error('Chat API error:', error)
+    console.error('[CHAT DEBUG] Request processing error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

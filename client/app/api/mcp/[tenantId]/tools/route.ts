@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { tenantId: string } }
+  { params }: { params: Promise<{ tenantId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -13,7 +13,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { tenantId } = params
+    const { tenantId } = await params
     
     // Proxy request to backend wrapper
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'

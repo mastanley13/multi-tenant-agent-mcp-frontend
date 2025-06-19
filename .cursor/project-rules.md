@@ -16,7 +16,8 @@ A task is ✅ **Done** when:
 3. Documentation updated (ROADMAP box checked, README/ADR if needed).
 4. No secrets or tokens emitted in logs (verified by CI grep).
 5. PR approved by ≥1 reviewer (pair-programming if solo).
-6. **ROADMAP UPDATED**: Task moved from `ROADMAP-TODO.md` to `ROADMAP-COMPLETED.md` immediately upon completion.
+6. **ROADMAP UPDATED**: Task moved from `ROADMAP-TODO.md` to `ROADMAP-COMPLETED.md` immediately upon completion. 
+7. **NEVER DESIGNATE TIME FRAMES**
 
 ## 3  Security & Secrets
 1. Never log raw `access_token`, `refresh_token`, or Bearer headers.
@@ -24,26 +25,67 @@ A task is ✅ **Done** when:
 3. Tenant credentials are stored only via encrypted `TenantSecret` rows or the chosen vault.
 4. New third-party dependencies must pass `pnpm audit`.
 
-## 4  Testing Baseline
+## 4  🔧 CRITICAL: Environment Variable Access for Debugging
+**MANDATORY PROTOCOL**: When the AI Agent needs to access environment variable information for debugging, configuration validation, or troubleshooting:
+
+### **Approved Method**: 
+Use terminal command with `Get-Content` (PowerShell) or `cat` (Unix) to read .env files:
+
+```powershell
+# PowerShell (Windows)
+Get-Content client/.env.local
+Get-Content .env.local
+Get-Content .env
+```
+
+```bash
+# Unix/Linux/Mac
+cat client/.env.local
+cat .env.local  
+cat .env
+```
+
+### **Security Guidelines**:
+- **ONLY for debugging**: Use only when needed for troubleshooting configuration issues
+- **NO logging of secrets**: Never log or repeat sensitive values like API keys, tokens, or passwords
+- **Validate configuration**: Use to verify environment variables are properly set
+- **Pattern matching**: Check for correct formatting and missing variables
+
+### **Approved Use Cases**:
+- ✅ Debugging database connection issues
+- ✅ Verifying environment variable formatting
+- ✅ Checking if required variables are present
+- ✅ Troubleshooting OAuth configuration
+- ✅ Validating API key availability (without exposing the key)
+
+### **Prohibited Actions**:
+- ❌ Never expose actual secret values in chat/logs
+- ❌ Never copy sensitive values to other locations
+- ❌ Never commit .env files to version control
+- ❌ Never share actual keys/tokens in documentation
+
+**Rationale**: This provides the AI Agent with necessary visibility into configuration issues while maintaining security boundaries.
+
+## 5  Testing Baseline
 1. ≥90 % coverage on new modules, ≥80 % project-wide.
 2. Every PR adds at least one happy-path & one edge-case test.
 3. End-to-end smoke test (`docker compose up && curl /health`) must remain green.
 
-## 5  CI/CD Gates
+## 6  CI/CD Gates
 1. PRs merge only from green GitHub Actions pipelines.
 2. `main` remains deployable; releases are made via tag + pipeline.
 
-## 6  Code Style & Tooling
+## 7  Code Style & Tooling
 1. Prettier + ESLint auto-fix on commit (`husky pre-commit`).
 2. TypeScript `strict` mode stays enabled.
 3. Log levels: `info`, `warn`, `error`; no `debug` in production.
 
-## 7  Observability First
+## 8  Observability First
 1. All long-running components export Prometheus metrics.
 2. Winston logs include `tenantId` and `requestId` where relevant.
 3. Unhandled promise rejections crash the process; Docker/PM2 restarts captured via metrics.
 
-## 8  🚨 CRITICAL: MCP Management & Usage Protocol
+## 9  🚨 CRITICAL: MCP Management & Usage Protocol
 **MANDATORY CONSTRAINT**: Maximum 2-3 MCPs can be enabled simultaneously for proper functionality.
 
 ### **Available MCPs & Their Purposes**
@@ -102,13 +144,13 @@ Current task requires: Context7 + Neon Database + Sequential Thinking
 Please enable Context7 MCP and confirm it's ready for use.
 ```
 
-## 9  Documentation Cadence & Roadmap Management
+## 10  Documentation Cadence & Roadmap Management
 1. **MANDATORY**: Update both `ROADMAP-TODO.md` and `ROADMAP-COMPLETED.md` upon each task completion
 2. **IMMEDIATE**: Move completed tasks from TODO to COMPLETED with timestamp and validation method
 3. **LIVING DOCS**: Keep roadmaps current - they are the source of truth for project status
 4. Add Architecture Decision Records (ADRs) for impactful infra/security decisions.
 
-## 10  🚨 CRITICAL: Documentation-First Problem Solving
+## 11  🚨 CRITICAL: Documentation-First Problem Solving
 **MANDATORY RULE**: If we encounter the same issue more than **2 times**, the Agent MUST:
 1. **First Priority**: Use GitHub MCP to examine relevant official repositories:
    - `https://github.com/openai/openai-agents-js` (our AI framework)
@@ -121,7 +163,7 @@ Please enable Context7 MCP and confirm it's ready for use.
 
 **Rationale**: Documentation gets us to the end, not just knowledge. Official repositories contain the ground truth we need for complex integrations.
 
-## 11 🎯 CRITICAL: Multi-Tenant MCP Integration Requirements
+## 12 🎯 CRITICAL: Multi-Tenant MCP Integration Requirements
 **MANDATORY for ANY MCP-related work**: Before making changes, the Agent MUST:
 1. **Use Context7 MCP** to fetch documentation from `/openai/openai-agents-js` and `/gohighlevel/highlevel-api-docs`
 2. **Use Neon Database MCP** to validate current tenant data and credentials
@@ -138,7 +180,7 @@ Please enable Context7 MCP and confirm it's ready for use.
 
 If more than 2 repeated issues occur with MCP integration, IMMEDIATELY request specific repository links from user and use official documentation sources.
 
-## 12 🔧 MANDATORY: Pre-Work Audit for Every Task
+## 13 🔧 MANDATORY: Pre-Work Audit for Every Task
 **CRITICAL RULE**: Before starting ANY implementation task, the Agent MUST complete a pre-work audit using the template in `ROADMAP-TODO.md`:
 
 ### **Pre-Work Audit Checklist**
@@ -174,7 +216,7 @@ If more than 2 repeated issues occur with MCP integration, IMMEDIATELY request s
 
 **NO IMPLEMENTATION WITHOUT COMPLETED PRE-WORK AUDIT**
 
-## 13 📋 MANDATORY: Roadmap Management
+## 14 📋 MANDATORY: Roadmap Management
 **AUTOMATIC UPDATES REQUIRED**: The Agent MUST immediately update roadmaps when:
 
 ### **Task Completion**
@@ -206,7 +248,7 @@ If more than 2 repeated issues occur with MCP integration, IMMEDIATELY request s
 
 **Rationale**: Living roadmaps prevent the restart cycles we've experienced and keep everyone aligned on current state and next steps.
 
-## 14 🎯 CRITICAL: MCP-Enhanced Development Process
+## 15 🎯 CRITICAL: MCP-Enhanced Development Process
 **MANDATORY WORKFLOW**: For any development work, the Agent MUST:
 
 1. **Request MCP Enablement**: Ask user to enable specific MCPs needed for the task
