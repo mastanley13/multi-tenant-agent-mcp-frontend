@@ -3,7 +3,7 @@
 
 const findUnique = jest.fn()
 
-jest.mock('../../client/lib/prisma', () => ({
+jest.mock('../../backend/src/prisma', () => ({
   prisma: {
     tenantSecret: {
       findUnique,

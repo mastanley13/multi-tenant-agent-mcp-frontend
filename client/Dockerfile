@@ -1,16 +1,52 @@
+# Frontend Dockerfile
 FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-COPY client/package*.json ./client/
-RUN npm ci --omit=dev && cd client && npm ci --omit=dev
-COPY client ./client
-RUN cd client && npm run build
 
-FROM node:20-alpine
 WORKDIR /app
-COPY --from=builder /app/client/.next ./.next
-COPY --from=builder /app/client/package*.json ./
-RUN npm ci --omit=dev
-ENV NODE_ENV=production PORT=3000
+
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Build the Next.js application
+RUN npm run build
+
+# Runtime stage
+FROM node:20-alpine
+
+# Install OpenSSL for Prisma
+RUN apk update && apk upgrade && apk add --no-cache openssl
+
+# Create non-root user
+RUN addgroup -S app && adduser -S app -G app
+
+WORKDIR /app
+
+# Copy built application and dependencies
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/prisma ./prisma
+
+# Set ownership
+RUN chown -R app:app /app
+USER app
+
+# Environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Expose port
 EXPOSE 3000
-CMD ["npm","run","start","--prefix","client"] 
+
+# Start the application
+CMD ["npm", "start"] 

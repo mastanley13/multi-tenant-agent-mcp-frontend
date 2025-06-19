@@ -84,11 +84,26 @@
 | ☑️ | H-3 | e2e smoke via GH Action 🧪 | QA | ① Runs docker image ② Returns 200 /health |
 
 ---
+## 🚨 URGENT - LIVE DEPLOYMENT GAPS
+
+### Critical Missing Pieces (Prevent Production Use)
+| Status | ID | Issue | Fix Required |
+| ------ | -- | ----- | ------------ |
+| 🔴 | DEPLOY-1 | **Frontend not accessible** | Dockerfile only serves backend, need to expose Next.js app |
+| 🔴 | DEPLOY-2 | **MCP tools not exposed via HTTP** | Add `/tools` and `/tools/:name` endpoints to backend |
+| 🔴 | DEPLOY-3 | **Missing environment variables** | Set NEXTAUTH_SECRET, GHL_CLIENT_ID, etc. in Railway |
+| 🔴 | DEPLOY-4 | **OAuth flow broken** | Configure GHL OAuth app with correct redirect URL |
+| 🔴 | DEPLOY-5 | **API routes not working** | Next.js API routes not accessible (need frontend running) |
+
+### Immediate Action Plan
+**See IMMEDIATE_DEPLOYMENT_PLAN.md for step-by-step fixes**
+
+---
 ## Kanban View
 
-| Backlog | In-Progress | Review | Done |
+| Urgent (Fix NOW) | In-Progress | Review | Done |
 | --- | --- | --- | --- |
-| A-1 A-2 A-3<br/>H-3 |  |  | B-1 B-2 B-3 C-1 C-2 D-1 D-2 A-4 A-5 E-1 E-2 E-3 F-1 F-2 F-3 G-1 G-2 H-1 H-2 H-3 |
+| **DEPLOY-1**<br/>**DEPLOY-2**<br/>**DEPLOY-3**<br/>**DEPLOY-4**<br/>**DEPLOY-5** |  |  | B-1 B-2 B-3 C-1 C-2 D-1 D-2 A-4 A-5 E-1 E-2 E-3 F-1 F-2 F-3 G-1 G-2 H-1 H-2 H-3 |
 
 Move task IDs across columns as work advances.
 

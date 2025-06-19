@@ -83,12 +83,10 @@ export function getOpenAIAgent(userCtx?: UserContext) {
       
       try {
         const tenantId = userCtx.id
-        const baseUrl = process.env.NEXT_PUBLIC_MCP_URL || process.env.MCP_SERVER_URL || 'http://localhost:3001'
-        const response = await fetch(`${baseUrl}/mcp/${tenantId}/tools`, {
+        const response = await fetch(`/api/mcp/${tenantId}/tools`, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${userCtx.accessToken}`,
-            'x-tenant-id': tenantId,
+            'Content-Type': 'application/json',
           },
         })
         
@@ -97,7 +95,8 @@ export function getOpenAIAgent(userCtx?: UserContext) {
           return []
         }
         
-        return await response.json()
+        const result = await response.json()
+        return result.tools || []
       } catch (error) {
         console.error('Error fetching available tools:', error)
         return []
@@ -110,15 +109,11 @@ export function getOpenAIAgent(userCtx?: UserContext) {
       }
       
       try {
-        // Use the multi-tenant MCP server endpoint format
-        const tenantId = userCtx.id // Use user ID as tenant ID
-        const baseUrl = process.env.NEXT_PUBLIC_MCP_URL || process.env.MCP_SERVER_URL || 'http://localhost:3001'
-        const response = await fetch(`${baseUrl}/mcp/${tenantId}/tool/${toolName}`, {
+        const tenantId = userCtx.id
+        const response = await fetch(`/api/mcp/${tenantId}/tools/${toolName}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${userCtx.accessToken}`,
-            'x-tenant-id': tenantId,
           },
           body: JSON.stringify(parameters)
         })

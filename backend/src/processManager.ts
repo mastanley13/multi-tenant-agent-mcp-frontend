@@ -72,7 +72,7 @@ setInterval(async () => {
   const now = Date.now()
   idleReaperLastRun.set(Math.floor(now / 1000))
 
-  for (const [tenantId, info] of processes) {
+  for (const [tenantId, info] of Array.from(processes.entries())) {
     if (info.refCount === 0 && now - info.lastUsed > IDLE_LIMIT_MS) {
       try {
         await info.proc.close()
@@ -91,7 +91,7 @@ setInterval(async () => {
  */
 export async function __forceReapIdleForTests() {
   const now = Date.now()
-  for (const [tenantId, info] of processes) {
+  for (const [tenantId, info] of Array.from(processes.entries())) {
     if (info.refCount === 0) {
       try {
         await info.proc.close()

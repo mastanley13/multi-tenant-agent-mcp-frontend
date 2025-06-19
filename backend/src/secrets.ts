@@ -24,6 +24,39 @@ export async function getTenantSecrets(tenantId: string): Promise<TenantSecrets>
         locationId: 'stub-loc',
       }
     }
+
+    // Fallback: look for OAuth account row to bootstrap TenantSecret
+    const account = await prisma.account.findFirst({
+      where: {
+        provider: 'oauth',
+        OR: [
+          { userId: tenantId },
+          { providerAccountId: tenantId },
+        ],
+      },
+    })
+
+    if (account?.access_token && account.locationId) {
+      // Create TenantSecret row for future use
+      await prisma.tenantSecret.create({
+        data: {
+          tenantId,
+          accessToken: account.access_token,
+          refreshToken: account.refresh_token ?? undefined,
+          expiresAt: account.expires_at ?? undefined,
+          locationId: account.locationId,
+          companyId: account.companyId ?? undefined,
+          ghlUserId: account.providerAccountId ?? undefined,
+          userType: account.userType ?? undefined,
+        },
+      })
+
+      return {
+        accessToken: account.access_token,
+        locationId: account.locationId,
+      }
+    }
+
     throw new Error(`TenantSecret not found for ${tenantId}`)
   }
 

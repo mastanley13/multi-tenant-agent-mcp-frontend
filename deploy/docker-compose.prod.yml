@@ -1,41 +1,74 @@
 version: '3.9'
+
 services:
   backend:
-    image: ${BACKEND_IMAGE:-ghl/backend:latest}
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: ghl/backend:latest
+    container_name: ghl-backend-prod
     restart: unless-stopped
-    env_file:
-      - ./env/backend.env
     ports:
       - "3001:3001"
-    depends_on:
-      - db
+    environment:
+      - NODE_ENV=production
+      - BACKEND_PORT=3001
+      - CLIENT_URL=${CLIENT_URL:-http://localhost:3000}
+      - GHL_BASE_URL=https://services.leadconnectorhq.com
+      # Add your production environment variables
+      # - DATABASE_URL=${DATABASE_URL}
+      # - OPENAI_API_KEY=${OPENAI_API_KEY}
     networks:
       - ghl-net
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
 
-  client:
-    image: ${CLIENT_IMAGE:-ghl/client:latest}
+  frontend:
+    build:
+      context: ../client
+      dockerfile: Dockerfile
+    image: ghl/frontend:latest
+    container_name: ghl-frontend-prod
     restart: unless-stopped
-    env_file:
-      - ./env/client.env
     ports:
       - "80:3000"
-    depends_on:
-      - backend
-    networks:
-      - ghl-net
-
-  db:
-    image: postgres:15-alpine
-    restart: unless-stopped
     environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-    volumes:
-      - db_data:/var/lib/postgresql/data
+      - NODE_ENV=production
+      - NEXT_PUBLIC_MCP_URL=${BACKEND_URL:-http://backend:3001}
+      - NEXT_PUBLIC_SERVER_URL=${BACKEND_URL:-http://backend:3001}
+      # Database connection for Prisma
+      # - DATABASE_URL=${DATABASE_URL}
+      # NextAuth configuration
+      # - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      # - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost}
+    depends_on:
+      backend:
+        condition: service_healthy
     networks:
       - ghl-net
 
-volumes:
-  db_data:
+  # Optional: Add a database service
+  # db:
+  #   image: postgres:15-alpine
+  #   container_name: ghl-db-prod
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: ${POSTGRES_DB:-ghl_agents}
+  #     POSTGRES_USER: ${POSTGRES_USER:-postgres}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #   volumes:
+  #     - db_data:/var/lib/postgresql/data
+  #   networks:
+  #     - ghl-net
+  #   ports:
+  #     - "5432:5432"
+
+# volumes:
+#   db_data:
 
 networks:
   ghl-net:

@@ -10,6 +10,7 @@ import { getProcess, releaseProcess } from './processManager'
 import { rateLimitMiddleware } from './rateLimiter'
 import { register } from './metrics'
 import { requestLogger } from './requestLogger'
+import type { Request, Response, NextFunction, RequestHandler } from 'express'
 
 // ---------------- Security: refuse to run as root in prod ----------------
 if (process.env.NODE_ENV === 'production' && typeof process.getuid === 'function' && process.getuid() === 0) {
@@ -29,13 +30,25 @@ const io = new SocketIOServer(server, {
   },
 })
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.BACKEND_PORT || 3001
 
 app.use(helmet({ contentSecurityPolicy: false }))
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:3000', credentials: true }))
 app.use(express.json())
 app.use(requestLogger)
-app.use(rateLimitMiddleware)
+
+// Helper type for async handlers so that returned Promise is handled correctly
+// and TypeScript can accept it as a valid Express RequestHandler.
+function asyncHandler<T extends Request, U extends Response>(
+  fn: (req: T, res: U, next: NextFunction) => Promise<unknown>,
+): RequestHandler {
+  return (req, res, next) => {
+    Promise.resolve(fn(req as T, res as U, next)).catch(next)
+  }
+}
+
+// Replace direct use of async middleware that returns Promise to avoid TS overload issues
+app.use(asyncHandler(rateLimitMiddleware))
 
 // ---------- In-memory agent cache per tenant -------------------
 interface AgentCacheEntry {
@@ -73,24 +86,39 @@ async function getAgentForTenant(tenantId: string) {
     modelSettings: { maxTokens: 1500 },
   })
 
-  agents.set(tenantId, { agent, mcpServerPath: mcp.opts?.args?.[0] ?? '', toolsCount: tools.length })
+  // Store limited metadata for diagnostics
+  agents.set(tenantId, { agent, mcpServerPath: '', toolsCount: tools.length })
   return agent
 }
 
 // ---------- REST example: agent status -------------------------
-app.get('/api/agent/status', async (req, res) => {
+app.get('/api/agent/status', asyncHandler(async (req, res) => {
   const tenantId = (req.headers['x-tenant-id'] as string) ?? ''
   if (!tenantId) return res.status(400).json({ error: 'Missing x-tenant-id header' })
 
   const agent = await getAgentForTenant(tenantId)
-  return res.json({ tenantId, tools: agent.tools.length })
-})
+  const toolsCollection: any = (agent as any).tools
+  let toolsCount: number
+  if (Array.isArray(toolsCollection)) {
+    toolsCount = toolsCollection.length
+  } else if (toolsCollection instanceof Map || toolsCollection instanceof Set) {
+    toolsCount = toolsCollection.size
+  } else if (toolsCollection && typeof toolsCollection === 'object') {
+    toolsCount = Object.keys(toolsCollection).length
+  } else {
+    toolsCount = 0
+  }
+
+  return res.json({ tenantId, tools: toolsCount })
+}))
 
 // Health endpoint
-app.get('/health', (_, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }))
+app.get('/health', (_, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+})
 
 // Prometheus metrics endpoint
-app.get('/metrics', async (_, res) => {
+app.get('/metrics', asyncHandler(async (_, res) => {
   try {
     res.setHeader('Content-Type', register.contentType)
     const metrics = await register.metrics()
@@ -99,7 +127,101 @@ app.get('/metrics', async (_, res) => {
     logger.error('Failed to collect metrics', err)
     res.status(500).send('Error collecting metrics')
   }
-})
+}))
+
+// MCP Tools listing endpoint
+app.get('/tools', asyncHandler(async (req, res) => {
+  try {
+    const tenantId = (req.headers['x-tenant-id'] as string) ?? 'anonymous'
+    const agent = await getAgentForTenant(tenantId)
+
+    // Normalize the tools collection into an array regardless of concrete type
+    let toolsArray: any[] = []
+    const rawTools: any = (agent as any).tools
+    if (Array.isArray(rawTools)) {
+      toolsArray = rawTools
+    } else if (rawTools && typeof rawTools === 'object') {
+      // Map, Set or generic object
+      if (rawTools instanceof Map) {
+        toolsArray = Array.from(rawTools.values())
+      } else if (rawTools instanceof Set) {
+        toolsArray = Array.from(rawTools)
+      } else {
+        toolsArray = Object.values(rawTools)
+      }
+    }
+
+    const toolsInfo = toolsArray.map((tool) => {
+      const parameters = (tool.inputSchema ?? tool.parameters) || undefined
+      return {
+        name: tool.name,
+        description: tool.description ?? tool.summary ?? undefined,
+        parameters,
+      }
+    })
+
+    res.json({
+      tools: toolsInfo,
+      count: toolsInfo.length,
+      tenantId,
+    })
+  } catch (error) {
+    logger.error('Failed to get tools', error)
+    res.status(500).json({ error: 'Failed to get tools' })
+  }
+}))
+
+// MCP Tool execution endpoint
+app.post('/tools/:toolName', asyncHandler(async (req, res) => {
+  try {
+    const tenantId = (req.headers['x-tenant-id'] as string) ?? 'anonymous'
+    const { toolName } = req.params
+    const agent = await getAgentForTenant(tenantId)
+
+    // Normalize tools collection (same logic as above)
+    let toolsArray: any[] = []
+    const rawTools: any = (agent as any).tools
+    if (Array.isArray(rawTools)) {
+      toolsArray = rawTools
+    } else if (rawTools && typeof rawTools === 'object') {
+      if (rawTools instanceof Map) {
+        toolsArray = Array.from(rawTools.values())
+      } else if (rawTools instanceof Set) {
+        toolsArray = Array.from(rawTools)
+      } else {
+        toolsArray = Object.values(rawTools)
+      }
+    }
+
+    const tool: any = toolsArray.find((t) => t.name === toolName)
+    if (!tool) {
+      return res.status(404).json({ error: `Tool '${toolName}' not found` })
+    }
+
+    // Execute the tool. Support different method names across versions
+    let result: any
+    if (typeof tool.call === 'function') {
+      result = await tool.call(req.body)
+    } else if (typeof tool.invoke === 'function') {
+      result = await tool.invoke(req.body)
+    } else if (typeof tool.execute === 'function') {
+      result = await tool.execute(req.body)
+    } else if (typeof tool.run === 'function') {
+      result = await tool.run(req.body)
+    } else {
+      return res.status(500).json({ error: `Tool '${toolName}' does not expose an executable method` })
+    }
+
+    res.json({
+      toolName,
+      result,
+      timestamp: new Date().toISOString(),
+    })
+  } catch (error) {
+    logger.error(`Tool execution failed for ${req.params.toolName}`, error)
+    res.status(500).json({ error: 'Tool execution failed' })
+  }
+}))
 
 // ---------- Socket.io chat ------------------------------------
 interface SessionInfo {

@@ -1,39 +1,56 @@
-# -------- Stage 1: dependencies & build --------
+# Backend Dockerfile
 FROM node:20-alpine AS builder
 
-# Use root in builder stage to avoid permission issues during npm installs inside nested dirs
-
 WORKDIR /app
 
-# Root package
+# Copy package files
 COPY package*.json ./
-RUN npm ci
+COPY backend/package*.json ./backend/
+COPY backend/mcp-src/package*.json ./backend/mcp-src/
 
-# Copy backend source (only TypeScript we need)
+# Copy Prisma schema for client generation
+COPY client/prisma ./client/prisma
+
+# Install dependencies without running postinstall scripts
+RUN npm install --ignore-scripts --omit=dev
+
+# Generate Prisma client
+RUN npx prisma generate --schema=./client/prisma/schema.prisma
+
+# Copy source code
 COPY backend ./backend
-# MCP submodule
-COPY backend/mcp-src ./backend/mcp-src
-# Skip pre-compiling backend TypeScript – tsx will transpile on-the-fly at runtime
-# (avoids ERR_MODULE_NOT_FOUND issue seen during `tsx build` in CI)
 
-# Build MCP server (outputs dist inside mcp-src)
-RUN cd backend/mcp-src && npm ci && npm run build && cd /app
+# Build MCP server
+WORKDIR /app/backend/mcp-src
+RUN npm ci && npm run build
 
-# -------- Stage 2: runtime image --------
+# Runtime stage
 FROM node:20-alpine
+
+# Install OpenSSL for Prisma and database connections
+RUN apk update && apk upgrade && apk add --no-cache openssl
+
+# Create non-root user
 RUN addgroup -S app && adduser -S app -G app
-USER app
+
 WORKDIR /app
 
-# Copy backend source
-COPY --from=builder /app/backend /app/backend
-# Copy installed node modules
+# Copy built application
+COPY --from=builder /app/backend ./backend
 COPY --from=builder /app/node_modules ./node_modules
-# Copy compiled MCP server (built in builder stage)
-COPY --from=builder /app/backend/mcp-src/dist /app/mcp
+COPY --from=builder /app/backend/mcp-src/dist ./backend/mcp-src/dist
+COPY --from=builder /app/client/prisma ./client/prisma
 
-# Production environment variables and entrypoint
-ENV NODE_ENV=production PORT=3001
+# Set ownership
+RUN chown -R app:app /app
+USER app
+
+# Environment variables
+ENV NODE_ENV=production
+ENV BACKEND_PORT=3001
+
+# Expose port
 EXPOSE 3001
-# Use tsx to run TypeScript directly (no prebuild needed)
+
+# Start the backend server
 CMD ["npx", "tsx", "backend/src/index.ts"] 

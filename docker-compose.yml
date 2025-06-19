@@ -1,26 +1,50 @@
 version: '3.9'
+
 services:
   backend:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: ghl-backend
     ports:
       - "3001:3001"
     environment:
-      - DATABASE_URL=${DATABASE_URL}
+      - NODE_ENV=development
+      - BACKEND_PORT=3001
+      - CLIENT_URL=http://localhost:3000
       - GHL_BASE_URL=https://services.leadconnectorhq.com
+      # Add your environment variables here
+      # - DATABASE_URL=${DATABASE_URL}
+      # - OPENAI_API_KEY=${OPENAI_API_KEY}
+    restart: unless-stopped
     networks:
       - ghl-net
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  client:
+  frontend:
     build:
       context: ./client
-    container_name: ghl-client
+      dockerfile: Dockerfile
+    container_name: ghl-frontend
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_MCP_URL=http://localhost:3001
+      - NODE_ENV=development
+      - NEXT_PUBLIC_MCP_URL=http://backend:3001
+      - NEXT_PUBLIC_SERVER_URL=http://backend:3001
+      # Database connection for Prisma
+      # - DATABASE_URL=${DATABASE_URL}
+      # NextAuth configuration
+      # - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      # - NEXTAUTH_URL=http://localhost:3000
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
     networks:
       - ghl-net
 

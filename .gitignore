@@ -242,4 +242,8 @@ non-strict-test.ts
 # Any personal notes or development files
 NOTES.md
 TODO.md
-PERSONAL.md 
+PERSONAL.md
+
+# compiled backend artefacts
+backend/src/**/*.js
+backend/src/**/*.js.map 
