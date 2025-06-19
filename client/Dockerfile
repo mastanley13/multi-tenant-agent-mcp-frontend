@@ -1,22 +1,16 @@
-# Frontend Dockerfile
+# Ultra-Simple Frontend Dockerfile
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and install dependencies
 COPY package*.json ./
 COPY prisma ./prisma
-
-# Install dependencies
 RUN npm ci
 
-# Copy source code
+# Copy source code and build
 COPY . .
-
-# Generate Prisma client
 RUN npx prisma generate
-
-# Build the Next.js application
 RUN npm run build
 
 # Runtime stage
@@ -30,7 +24,7 @@ RUN addgroup -S app && adduser -S app -G app
 
 WORKDIR /app
 
-# Copy built application and dependencies
+# Copy built application
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
@@ -47,5 +41,5 @@ ENV PORT=3000
 # Expose port
 EXPOSE 3000
 
-# Start the application
+# Start frontend
 CMD ["npm", "start"] 
