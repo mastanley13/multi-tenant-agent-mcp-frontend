@@ -28,7 +28,7 @@ export function ChatInterface() {
   }, [])
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-hidden">
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {isMobile && sidebarOpen && (
@@ -47,9 +47,9 @@ export function ChatInterface() {
       <AnimatePresence mode="wait">
         {sidebarOpen && (
           <motion.div
-            initial={{ x: isMobile ? -320 : 0, opacity: isMobile ? 0 : 1 }}
+            initial={{ x: isMobile ? -100 : 0, opacity: isMobile ? 0 : 1 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: isMobile ? -320 : 0, opacity: isMobile ? 0 : 1 }}
+            exit={{ x: isMobile ? -100 : 0, opacity: isMobile ? 0 : 1 }}
             transition={{ 
               type: "spring", 
               stiffness: 300, 
@@ -58,7 +58,8 @@ export function ChatInterface() {
             }}
             className={`
               ${isMobile ? 'fixed' : 'relative'} 
-              z-50 w-80 h-full
+              z-50 h-full flex-shrink-0
+              w-full max-w-xs sm:max-w-sm lg:max-w-md xl:max-w-lg
               ${isMobile ? 'lg:relative lg:z-auto' : ''}
             `}
           >
@@ -76,7 +77,7 @@ export function ChatInterface() {
       {/* Main Chat Area */}
       <motion.div 
         layout
-        className="flex-1 flex flex-col min-w-0"
+        className="flex-1 flex flex-col min-w-0 overflow-hidden"
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
         <ChatWindow

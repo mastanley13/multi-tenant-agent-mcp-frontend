@@ -103,9 +103,9 @@ export function ChatSidebar({
     const planName = planNames[planId_lower as keyof typeof planNames] || planId
     
     return (
-      <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${colorClass}`}>
-        <Crown className="w-3 h-3 mr-1" />
-        {planName}
+      <div className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium border ${colorClass} flex-shrink-0`}>
+        <Crown className="w-2.5 h-2.5 mr-1 flex-shrink-0" />
+        <span className="truncate">{planName}</span>
       </div>
     )
   }
@@ -114,27 +114,27 @@ export function ChatSidebar({
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="h-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-slate-700/50 flex flex-col shadow-xl"
+      className="h-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-slate-700/50 flex flex-col shadow-xl w-full max-w-sm min-w-0"
     >
       {/* Header */}
-      <div className="p-6 border-b border-slate-200/50 dark:border-slate-700/50">
-        <div className="flex items-center justify-between mb-6">
+      <div className="p-3 sm:p-4 lg:p-6 border-b border-slate-200/50 dark:border-slate-700/50 flex-shrink-0">
+        <div className="flex items-center justify-between mb-4 sm:mb-6 min-w-0">
           <motion.h1 
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
+            className="text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent truncate flex-1 min-w-0"
           >
             AI Assistant
           </motion.h1>
           
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0 ml-2">
             <Button
               onClick={handleNewChat}
               size="sm"
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-xs sm:text-sm px-2 sm:px-3"
             >
-              <Plus className="w-4 h-4 mr-1" />
-              New
+              <Plus className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+              <span className="hidden sm:inline">New</span>
             </Button>
             
             {isMobile && onClose && (
@@ -142,7 +142,7 @@ export function ChatSidebar({
                 onClick={onClose}
                 variant="ghost"
                 size="sm"
-                className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 p-1 sm:p-2"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -159,47 +159,49 @@ export function ChatSidebar({
         >
           <div 
             className={`
-              p-4 rounded-xl bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-700 
+              p-3 sm:p-4 rounded-xl bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-700 
               border border-slate-200/50 dark:border-slate-600/50 cursor-pointer transition-all duration-300
-              hover:shadow-lg hover:scale-[1.02]
+              hover:shadow-lg hover:scale-[1.02] min-w-0
               ${userMenuOpen ? 'shadow-lg scale-[1.02]' : ''}
             `}
             onClick={() => setUserMenuOpen(!userMenuOpen)}
           >
-            <div className="flex items-center space-x-3">
-              <Avatar className="w-12 h-12 ring-2 ring-white/50 shadow-lg">
+            <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+              <Avatar className="w-8 h-8 sm:w-10 lg:w-12 sm:h-10 lg:h-12 ring-2 ring-white/50 shadow-lg flex-shrink-0">
                 <AvatarImage src={session?.user?.image || ''} />
-                <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold">
+                <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-xs sm:text-sm">
                   {session?.user?.name?.[0] || 'U'}
                 </AvatarFallback>
               </Avatar>
               
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2 mb-1">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <div className="flex items-center space-x-1 sm:space-x-2 mb-1 min-w-0">
+                  <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 truncate flex-1 min-w-0">
                     {session?.user?.name || 'User'}
                   </p>
-                  {session?.planId && getPlanBadge(session.planId)}
-                </div>
-                
-                <div className="flex items-center space-x-1 text-xs text-slate-600 dark:text-slate-400">
-                  {session?.locationId && (
-                    <>
-                      <MapPin className="w-3 h-3" />
-                      <span className="truncate">ID: {session.locationId.slice(-8)}</span>
-                    </>
+                  {session?.planId && (
+                    <div className="flex-shrink-0">
+                      {getPlanBadge(session.planId)}
+                    </div>
                   )}
                 </div>
                 
+                {session?.locationId && (
+                  <div className="flex items-center space-x-1 text-xs text-slate-600 dark:text-slate-400 mb-1 min-w-0">
+                    <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0" />
+                    <span className="truncate">ID: {session.locationId.slice(-8)}</span>
+                  </div>
+                )}
+                
                 {session?.companyId && (
-                  <div className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-500 mt-1">
-                    <Building2 className="w-3 h-3" />
+                  <div className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-500 min-w-0">
+                    <Building2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0" />
                     <span className="truncate">Company: {session.companyId.slice(-8)}</span>
                   </div>
                 )}
               </div>
               
-              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3 h-3 sm:w-4 sm:h-4 text-slate-400 transition-transform flex-shrink-0 ${userMenuOpen ? 'rotate-180' : ''}`} />
             </div>
           </div>
 
@@ -211,26 +213,26 @@ export function ChatSidebar({
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
-                className="absolute top-full left-0 right-0 mt-2 z-10"
+                className="absolute top-full left-0 right-0 mt-2 z-10 min-w-0"
               >
                 <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200/50 dark:border-slate-700/50 overflow-hidden">
                   <div className="p-2 space-y-1">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100"
+                      className="w-full justify-start text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 text-xs sm:text-sm px-2 sm:px-3"
                     >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Settings
+                      <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                      <span className="truncate">Settings</span>
                     </Button>
                     <Button
                       onClick={() => signOut()}
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs sm:text-sm px-2 sm:px-3"
                     >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Sign out
+                      <LogOut className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                      <span className="truncate">Sign out</span>
                     </Button>
                   </div>
                 </div>
@@ -241,43 +243,45 @@ export function ChatSidebar({
       </div>
 
       {/* Conversations List */}
-      <ScrollArea className="flex-1">
-        <div className="p-4">
+      <ScrollArea className="flex-1 min-h-0">
+        <div className="p-3 sm:p-4">
           {loading ? (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-8"
+              className="text-center py-6 sm:py-8"
             >
-              <div className="flex items-center justify-center space-x-2 text-slate-500 dark:text-slate-400">
-                <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                <span className="text-sm ml-2">Loading conversations...</span>
+              <div className="flex items-center justify-center space-x-2 text-slate-500 dark:text-slate-400 flex-wrap">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" />
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                </div>
+                <span className="text-xs sm:text-sm">Loading conversations...</span>
               </div>
             </motion.div>
           ) : conversations.length === 0 ? (
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center py-12"
+              className="text-center py-8 sm:py-12 px-2"
             >
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <MessageSquare className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <MessageSquare className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 dark:text-purple-400" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+              <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
                 No conversations yet
               </h3>
-              <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
+              <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mb-4 px-2 leading-relaxed">
                 Start a new chat to begin your AI-powered CRM journey
               </p>
               <Button
                 onClick={handleNewChat}
                 variant="outline"
                 size="sm"
-                className="border-purple-200 text-purple-600 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-400 dark:hover:bg-purple-900/20"
+                className="border-purple-200 text-purple-600 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-400 dark:hover:bg-purple-900/20 text-xs sm:text-sm px-3 sm:px-4"
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Start chatting
               </Button>
             </motion.div>
@@ -291,32 +295,32 @@ export function ChatSidebar({
                   transition={{ delay: index * 0.05 }}
                   onClick={() => handleSelectConversation(conversation.id)}
                   className={`
-                    w-full text-left p-4 rounded-xl transition-all duration-300 group
+                    w-full text-left p-3 sm:p-4 rounded-xl transition-all duration-300 group min-w-0
                     ${selectedConversationId === conversation.id
                       ? 'bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 border-2 border-purple-200 dark:border-purple-700 shadow-lg'
                       : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border-2 border-transparent'
                     }
                   `}
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                  <div className="flex justify-between items-start mb-2 min-w-0 gap-2">
+                    <h3 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-slate-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors flex-1 min-w-0 break-words leading-tight">
                       {conversation.title || 'New Chat'}
                     </h3>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 ml-2 flex-shrink-0">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 flex-shrink-0 whitespace-nowrap">
                       {formatDate(conversation.updatedAt)}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 truncate mb-2 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mb-2 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors break-words line-clamp-2 leading-relaxed">
                     {conversation.lastMessage || 'No messages yet'}
                   </p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-slate-400 dark:text-slate-500">
+                  <div className="flex justify-between items-center min-w-0 gap-2">
+                    <span className="text-xs text-slate-400 dark:text-slate-500 truncate">
                       {conversation.messageCount} messages
                     </span>
                     {selectedConversationId === conversation.id && (
-                      <div className="flex items-center space-x-1">
-                        <Star className="w-3 h-3 text-purple-500" fill="currentColor" />
-                        <span className="text-xs text-purple-600 dark:text-purple-400 font-medium">Active</span>
+                      <div className="flex items-center space-x-1 flex-shrink-0">
+                        <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-500" fill="currentColor" />
+                        <span className="text-xs text-purple-600 dark:text-purple-400 font-medium whitespace-nowrap">Active</span>
                       </div>
                     )}
                   </div>
