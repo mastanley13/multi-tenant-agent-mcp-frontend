@@ -400,6 +400,24 @@ export interface UserContext {
   accessToken: string
 }
 
+// Helper function to get current locationId with proper priority and logging
+function getCurrentLocationId(user: any, source: string): string | undefined {
+  // Always prioritize current Account.locationId over stale User.locationId
+  const currentLocationId = user.accounts?.[0]?.locationId
+  const staleLocationId = user.locationId
+  
+  if (currentLocationId) {
+    console.log(`[AUTH DEBUG] Using CURRENT Account.locationId: ${currentLocationId} (source: ${source})`)
+    return currentLocationId
+  } else if (staleLocationId) {
+    console.log(`[AUTH DEBUG] Fallback to User.locationId: ${staleLocationId} (source: ${source}) - THIS MAY BE STALE!`)
+    return staleLocationId
+  } else {
+    console.log(`[AUTH DEBUG] No locationId found (source: ${source})`)
+    return undefined
+  }
+}
+
 export async function getUserContext(userId: string): Promise<UserContext> {
   try {
     console.log('[AUTH DEBUG] getUserContext called with userId:', userId)
@@ -408,12 +426,14 @@ export async function getUserContext(userId: string): Promise<UserContext> {
       where: { id: userId },
       include: {
         accounts: {
-          where: { provider: 'oauth' }
+          where: { provider: 'oauth' },
+          take: 1 // Only need the OAuth account
         }
       }
     })
 
     console.log('[AUTH DEBUG] Database user found:', user ? 'YES' : 'NO', user?.id)
+    console.log('[AUTH DEBUG] User has', user?.accounts?.length || 0, 'OAuth accounts')
 
     if (!user) {
       // Try to find user by locationId if the direct lookup failed
@@ -423,7 +443,8 @@ export async function getUserContext(userId: string): Promise<UserContext> {
         },
         include: {
           accounts: {
-            where: { provider: 'oauth' }
+            where: { provider: 'oauth' },
+            take: 1
           }
         }
       })
@@ -440,9 +461,11 @@ export async function getUserContext(userId: string): Promise<UserContext> {
         throw new Error('No valid access token found')
       }
       
+      const currentLocationId = getCurrentLocationId(userByLocation, 'userByLocation')
+      
       return {
         id: userByLocation.id,
-        locationId: userByLocation.locationId || userByLocation.accounts[0]?.locationId || undefined,
+        locationId: currentLocationId,
         accessToken,
       }
     }
@@ -452,9 +475,11 @@ export async function getUserContext(userId: string): Promise<UserContext> {
       throw new Error('No valid access token found')
     }
     
+    const currentLocationId = getCurrentLocationId(user, 'mainUser')
+    
     return {
       id: userId,
-      locationId: user.locationId || user.accounts[0]?.locationId || undefined,
+      locationId: currentLocationId,
       accessToken,
     }
   } catch (error) {

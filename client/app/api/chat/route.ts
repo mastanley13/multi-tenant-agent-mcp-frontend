@@ -84,11 +84,37 @@ export async function POST(request: NextRequest) {
     const agentInstance = getOpenAIAgent(userCtx)
     console.log('[CHAT DEBUG] Created OpenAI agent, userCtx available:', !!userCtx)
     
-    // Build conversation context for the agent
-    const conversationHistory = conversation.messages.map(m => `${m.role}: ${m.content}`).join('\n')
-    const contextualPrompt = conversationHistory 
-      ? `Previous conversation:\n${conversationHistory}\n\nUser: ${message}`
+    // Build intelligent conversation context using Mem0 semantic memory
+    let contextualPrompt = message
+    let relevantContext = ''
+    
+    // Add user message to memory (if userCtx available for tenant isolation)
+    if (userCtx?.locationId) {
+      // Import memory client dynamically to avoid initialization issues
+      const { memoryClient } = await import('@/lib/memory')
+      
+      // Get relevant context from semantic memory
+      relevantContext = await memoryClient.getConversationContext(message, userCtx.locationId, conversation.id)
+      
+      // Add user message to memory for future context
+      await memoryClient.addMessage(message, userCtx.locationId, 'user', {
+        conversationId: conversation.id,
+        timestamp: new Date().toISOString()
+      })
+    }
+    
+    // Build contextual prompt with intelligent memory (if available) or fallback to basic history
+    if (relevantContext) {
+      contextualPrompt = `Relevant context from previous conversations:\n${relevantContext}\n\nCurrent message: ${message}`
+      console.log('[MEMORY] Using semantic memory context for enhanced response')
+    } else {
+      // Fallback to basic conversation history (but limit to recent messages for performance)
+      const recentHistory = conversation.messages.slice(-6).map(m => `${m.role}: ${m.content}`).join('\n')
+      contextualPrompt = recentHistory 
+        ? `Recent conversation:\n${recentHistory}\n\nUser: ${message}`
       : message
+      console.log('[MEMORY] Using fallback conversation history')
+    }
 
     console.log('[CHAT DEBUG] Prepared contextual prompt for agent')
     
@@ -178,6 +204,15 @@ export async function POST(request: NextRequest) {
                 conversationId: conversation.id
               }
             })
+            
+            // Add assistant response to memory for future context
+            if (userCtx?.locationId) {
+              const { memoryClient } = await import('@/lib/memory')
+              await memoryClient.addMessage(assistantMessage, userCtx.locationId, 'assistant', {
+                conversationId: conversation.id,
+                timestamp: new Date().toISOString()
+              })
+            }
           }
 
           // Send completion signal
@@ -209,6 +244,16 @@ export async function POST(request: NextRequest) {
                 conversationId: conversation.id
               }
             })
+            
+            // Add fallback assistant response to memory for future context
+            if (userCtx?.locationId) {
+              const { memoryClient } = await import('@/lib/memory')
+              await memoryClient.addMessage(assistantMessage, userCtx.locationId, 'assistant', {
+                conversationId: conversation.id,
+                timestamp: new Date().toISOString(),
+                fallback: true
+              })
+            }
             
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
               status: 'completed',
