@@ -12,6 +12,11 @@ export function ChatInterface() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
 
+  // Handle conversation update from chat window
+  const handleConversationUpdate = (conversationId: string) => {
+    setSelectedConversationId(conversationId)
+  }
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024)
@@ -84,6 +89,7 @@ export function ChatInterface() {
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           sidebarOpen={sidebarOpen}
           session={session}
+          onConversationUpdate={handleConversationUpdate}
         />
       </motion.div>
     </div>

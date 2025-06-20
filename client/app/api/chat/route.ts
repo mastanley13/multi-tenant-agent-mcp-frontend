@@ -88,17 +88,18 @@ export async function POST(request: NextRequest) {
     let contextualPrompt = message
     let relevantContext = ''
     
-    // Add user message to memory (if userCtx available for tenant isolation)
-    if (userCtx?.locationId) {
+    // Add user message to memory (if userCtx available with ghlUserId for user-based memory)
+    if (userCtx?.ghlUserId) {
       // Import memory client dynamically to avoid initialization issues
       const { memoryClient } = await import('@/lib/memory')
       
-      // Get relevant context from semantic memory
-      relevantContext = await memoryClient.getConversationContext(message, userCtx.locationId, conversation.id)
+      // Get relevant context from semantic memory using actual GHL user ID
+      relevantContext = await memoryClient.getConversationContext(message, userCtx.ghlUserId, conversation.id)
       
-      // Add user message to memory for future context
-      await memoryClient.addMessage(message, userCtx.locationId, 'user', {
+      // Add user message to memory for future context (tied to user, not location)
+      await memoryClient.addMessage(message, userCtx.ghlUserId, 'user', {
         conversationId: conversation.id,
+        currentLocation: userCtx.locationId, // Store location as metadata
         timestamp: new Date().toISOString()
       })
     }
@@ -205,11 +206,12 @@ export async function POST(request: NextRequest) {
               }
             })
             
-            // Add assistant response to memory for future context
-            if (userCtx?.locationId) {
+            // Add assistant response to memory for future context (tied to user)
+            if (userCtx?.ghlUserId) {
               const { memoryClient } = await import('@/lib/memory')
-              await memoryClient.addMessage(assistantMessage, userCtx.locationId, 'assistant', {
+              await memoryClient.addMessage(assistantMessage, userCtx.ghlUserId, 'assistant', {
                 conversationId: conversation.id,
+                currentLocation: userCtx.locationId, // Store location as metadata
                 timestamp: new Date().toISOString()
               })
             }
@@ -245,11 +247,12 @@ export async function POST(request: NextRequest) {
               }
             })
             
-            // Add fallback assistant response to memory for future context
-            if (userCtx?.locationId) {
+            // Add fallback assistant response to memory for future context (tied to user)
+            if (userCtx?.ghlUserId) {
               const { memoryClient } = await import('@/lib/memory')
-              await memoryClient.addMessage(assistantMessage, userCtx.locationId, 'assistant', {
+              await memoryClient.addMessage(assistantMessage, userCtx.ghlUserId, 'assistant', {
                 conversationId: conversation.id,
+                currentLocation: userCtx.locationId, // Store location as metadata
                 timestamp: new Date().toISOString(),
                 fallback: true
               })

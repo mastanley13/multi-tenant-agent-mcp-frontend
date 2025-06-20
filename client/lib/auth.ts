@@ -397,6 +397,7 @@ export async function getValidToken(userId: string): Promise<string | null> {
 export interface UserContext {
   id: string
   locationId?: string
+  ghlUserId?: string  // Actual GHL user ID for memory storage
   accessToken: string
 }
 
@@ -414,6 +415,20 @@ function getCurrentLocationId(user: any, source: string): string | undefined {
     return staleLocationId
   } else {
     console.log(`[AUTH DEBUG] No locationId found (source: ${source})`)
+    return undefined
+  }
+}
+
+// Helper function to get actual GHL user ID for memory storage
+function getGhlUserId(user: any, source: string): string | undefined {
+  // Get the actual GHL user ID from Account.userId (same as User.id for the person)
+  const ghlUserId = user.accounts?.[0]?.userId || user.id
+  
+  if (ghlUserId) {
+    console.log(`[AUTH DEBUG] Using GHL userId for memory: ${ghlUserId} (source: ${source})`)
+    return ghlUserId
+  } else {
+    console.log(`[AUTH DEBUG] No GHL userId found (source: ${source})`)
     return undefined
   }
 }
@@ -462,10 +477,12 @@ export async function getUserContext(userId: string): Promise<UserContext> {
       }
       
       const currentLocationId = getCurrentLocationId(userByLocation, 'userByLocation')
+      const ghlUserId = getGhlUserId(userByLocation, 'userByLocation')
       
       return {
         id: userByLocation.id,
         locationId: currentLocationId,
+        ghlUserId: ghlUserId,
         accessToken,
       }
     }
@@ -476,10 +493,12 @@ export async function getUserContext(userId: string): Promise<UserContext> {
     }
     
     const currentLocationId = getCurrentLocationId(user, 'mainUser')
+    const ghlUserId = getGhlUserId(user, 'mainUser')
     
     return {
       id: userId,
       locationId: currentLocationId,
+      ghlUserId: ghlUserId,
       accessToken,
     }
   } catch (error) {
