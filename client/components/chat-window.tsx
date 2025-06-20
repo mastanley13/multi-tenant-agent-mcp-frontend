@@ -232,14 +232,14 @@ export function ChatWindow({
       <motion.div 
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="flex items-center justify-between p-4 lg:p-6 border-b border-slate-200/50 dark:border-slate-700/50 glass-intense"
+        className="flex items-center justify-between p-4 lg:p-6 border-b border-slate-300 dark:border-slate-700/50 glass-intense"
       >
         <div className="flex items-center space-x-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={onToggleSidebar}
-            className="lg:hidden text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/50"
+            className="lg:hidden text-slate-700 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/50"
           >
             <Menu className="w-5 h-5" />
           </Button>
@@ -249,10 +249,10 @@ export function ChatWindow({
               <Zap className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+              <h2 className="text-lg font-semibold text-contrast-high">
                 {conversationId ? 'AI Assistant' : 'New Conversation'}
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-contrast-medium">
                 {session?.userType || 'GoHighLevel'} Assistant
               </p>
             </div>
@@ -260,7 +260,7 @@ export function ChatWindow({
         </div>
         
         <div className="flex items-center space-x-2">
-          <div className="hidden sm:flex items-center space-x-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-full border border-emerald-200/50 dark:border-emerald-800/50">
+          <div className="hidden sm:flex items-center space-x-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-full border border-emerald-200 dark:border-emerald-800/50">
             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
             <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">Online</span>
           </div>
@@ -291,7 +291,7 @@ export function ChatWindow({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2"
+                  className="text-2xl lg:text-3xl font-bold text-contrast-high mb-2"
                 >
                   {welcome.greeting}, {welcome.userName}! ⚡
                 </motion.h3>
@@ -300,7 +300,7 @@ export function ChatWindow({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="text-slate-600 dark:text-slate-400 mb-4 max-w-2xl mx-auto"
+                  className="text-contrast-medium mb-4 max-w-2xl mx-auto"
                 >
                   I'm your cutting-edge AI assistant for GoHighLevel. Ready to supercharge your CRM, 
                   analyze pipelines, automate workflows, and drive business growth.
@@ -311,16 +311,16 @@ export function ChatWindow({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
-                    className="flex items-center justify-center space-x-4 text-sm text-slate-500 dark:text-slate-400 mb-8"
+                    className="flex items-center justify-center space-x-4 text-sm text-contrast-medium mb-8"
                   >
                     {welcome.locationInfo && (
-                      <div className="flex items-center space-x-1 px-3 py-1 bg-slate-100 dark:bg-slate-800/50 rounded-full">
+                      <div className="flex items-center space-x-1 px-3 py-1 bg-slate-100 dark:bg-slate-800/50 rounded-full border border-slate-200 dark:border-slate-700">
                         <Activity className="w-4 h-4 text-cyan-500" />
                         <span>{welcome.locationInfo}</span>
                       </div>
                     )}
                     {welcome.planInfo && (
-                      <div className="flex items-center space-x-1 px-3 py-1 bg-slate-100 dark:bg-slate-800/50 rounded-full">
+                      <div className="flex items-center space-x-1 px-3 py-1 bg-slate-100 dark:bg-slate-800/50 rounded-full border border-slate-200 dark:border-slate-700">
                         <Clock className="w-4 h-4 text-emerald-500" />
                         <span>{welcome.planInfo}</span>
                       </div>
@@ -343,15 +343,15 @@ export function ChatWindow({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.7 + index * 0.1 }}
                     onClick={() => setInput(action.action)}
-                    className="group p-4 glass rounded-xl border border-slate-200/50 dark:border-slate-700/50 hover:border-cyan-300/50 dark:hover:border-cyan-700/50 transition-all duration-300 hover:shadow-medium hover:-translate-y-1 hover:scale-105"
+                    className="group p-4 surface-elevated rounded-xl hover:border-cyan-400/50 dark:hover:border-cyan-700/50 transition-all duration-300 hover:shadow-medium hover:-translate-y-1 hover:scale-105"
                   >
                     <div className={`w-12 h-12 bg-gradient-to-r ${action.color} rounded-lg flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform shadow-lg`}>
                       <action.icon className="w-6 h-6 text-white" />
                     </div>
-                    <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">
+                    <h4 className="font-semibold text-contrast-high mb-1">
                       {action.label}
                     </h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-contrast-medium">
                       Click to get started
                     </p>
                   </motion.button>
@@ -398,7 +398,7 @@ export function ChatWindow({
                     <p className="text-sm leading-relaxed">{message.content}</p>
                   )}
                 </div>
-                <div className={`text-xs text-slate-500 dark:text-slate-400 mt-2 ${
+                <div className={`text-xs text-contrast-low mt-2 ${
                   message.role === 'user' ? 'text-right' : 'text-left'
                 }`}>
                   {new Date(message.createdAt).toLocaleTimeString([], { 
@@ -456,7 +456,7 @@ export function ChatWindow({
                 </Avatar>
                 <div className="flex items-center px-6 py-4 rounded-2xl chat-bubble-assistant shadow-lg">
                   <LoadingSpinner size="sm" />
-                  <span className="ml-3 text-sm text-slate-600 dark:text-slate-400">Processing...</span>
+                  <span className="ml-3 text-sm text-contrast-medium">Processing...</span>
                 </div>
               </motion.div>
             )}
@@ -470,7 +470,7 @@ export function ChatWindow({
       <motion.div 
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="p-4 lg:p-6 border-t border-slate-200/50 dark:border-slate-700/50 glass-intense"
+        className="p-4 lg:p-6 border-t border-slate-300 dark:border-slate-700/50 glass-intense"
       >
         <div className="flex items-end space-x-3 max-w-4xl mx-auto">
           <div className="flex-1 relative">
@@ -484,7 +484,7 @@ export function ChatWindow({
             />
             {input && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <kbd className="hidden sm:inline-flex items-center px-2 py-1 bg-slate-100 dark:bg-slate-700 text-xs text-slate-500 dark:text-slate-400 rounded border border-slate-200 dark:border-slate-600">
+                <kbd className="hidden sm:inline-flex items-center px-2 py-1 bg-slate-100 dark:bg-slate-700 text-xs text-contrast-medium rounded border border-slate-300 dark:border-slate-600">
                   ⏎
                 </kbd>
               </div>

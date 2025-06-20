@@ -88,10 +88,10 @@ export function ChatSidebar({
     if (!planId) return null
     
     const planColors = {
-      'starter': 'bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700',
-      'unlimited': 'bg-cyan-100 text-cyan-700 border-cyan-300 dark:bg-cyan-900/30 dark:text-cyan-300 dark:border-cyan-700',
-      'saas_pro': 'bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700',
-      'agency': 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-600'
+      'starter': 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700',
+      'unlimited': 'bg-cyan-100 text-cyan-800 border-cyan-300 dark:bg-cyan-900/30 dark:text-cyan-300 dark:border-cyan-700',
+      'saas_pro': 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700',
+      'agency': 'bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-600'
     }
     
     const planNames = {
@@ -102,7 +102,7 @@ export function ChatSidebar({
     }
     
     const planId_lower = planId.toLowerCase()
-    const colorClass = planColors[planId_lower as keyof typeof planColors] || 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-600'
+    const colorClass = planColors[planId_lower as keyof typeof planColors] || 'bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-600'
     const planName = planNames[planId_lower as keyof typeof planNames] || planId
     
     return (
@@ -117,10 +117,10 @@ export function ChatSidebar({
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="h-full glass-intense backdrop-blur-xl border-r border-slate-300/30 dark:border-slate-700/30 flex flex-col shadow-2xl"
+      className="h-full glass-intense backdrop-blur-xl border-r border-slate-300 dark:border-slate-700/30 flex flex-col shadow-2xl"
     >
       {/* Header */}
-      <div className="p-6 border-b border-slate-300/30 dark:border-slate-700/30">
+      <div className="p-6 border-b border-slate-300 dark:border-slate-700/30">
         <div className="flex items-center justify-between mb-6">
           <motion.div 
             initial={{ y: -10, opacity: 0 }}
@@ -151,7 +151,7 @@ export function ChatSidebar({
                 onClick={onClose}
                 variant="ghost"
                 size="sm"
-                className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                className="text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/50"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -168,14 +168,14 @@ export function ChatSidebar({
         >
           <div 
             className={`
-              p-4 rounded-xl glass border border-slate-300/30 dark:border-slate-700/30 cursor-pointer transition-all duration-300
-              hover:shadow-medium hover:scale-[1.02] hover:border-cyan-300/50 dark:hover:border-cyan-700/50
-              ${userMenuOpen ? 'shadow-medium scale-[1.02] border-cyan-300/50 dark:border-cyan-700/50' : ''}
+              p-4 rounded-xl surface-elevated cursor-pointer transition-all duration-300
+              hover:shadow-medium hover:scale-[1.02] hover:border-cyan-400/50 dark:hover:border-cyan-700/50
+              ${userMenuOpen ? 'shadow-medium scale-[1.02] border-cyan-400/50 dark:border-cyan-700/50' : ''}
             `}
             onClick={() => setUserMenuOpen(!userMenuOpen)}
           >
             <div className="flex items-center space-x-3">
-              <Avatar className="w-12 h-12 ring-2 ring-cyan-200/50 dark:ring-cyan-800/50 shadow-lg">
+              <Avatar className="w-12 h-12 ring-2 ring-cyan-200 dark:ring-cyan-800/50 shadow-lg">
                 <AvatarImage src={session?.user?.image || ''} />
                 <AvatarFallback className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold">
                   {session?.user?.name?.[0] || 'U'}
@@ -184,13 +184,13 @@ export function ChatSidebar({
               
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2 mb-1">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                  <p className="text-sm font-semibold text-contrast-high truncate">
                     {session?.user?.name || 'User'}
                   </p>
                   {session?.planId && getPlanBadge(session.planId)}
                 </div>
                 
-                <div className="flex items-center space-x-1 text-xs text-slate-600 dark:text-slate-400">
+                <div className="flex items-center space-x-1 text-xs text-contrast-medium">
                   {session?.locationId && (
                     <>
                       <MapPin className="w-3 h-3" />
@@ -200,14 +200,14 @@ export function ChatSidebar({
                 </div>
                 
                 {session?.companyId && (
-                  <div className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-500 mt-1">
+                  <div className="flex items-center space-x-1 text-xs text-contrast-low mt-1">
                     <Building2 className="w-3 h-3" />
                     <span className="truncate">Company: {session.companyId.slice(-8)}</span>
                   </div>
                 )}
               </div>
               
-              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-4 h-4 text-contrast-medium transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
             </div>
           </div>
 
@@ -221,12 +221,12 @@ export function ChatSidebar({
                 transition={{ duration: 0.2 }}
                 className="absolute top-full left-0 right-0 mt-2 z-10"
               >
-                <div className="glass-intense rounded-xl shadow-2xl border border-slate-300/30 dark:border-slate-700/30 overflow-hidden">
+                <div className="glass-intense rounded-xl shadow-2xl border border-slate-300 dark:border-slate-700/30 overflow-hidden">
                   <div className="p-2 space-y-1">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                      className="w-full justify-start text-contrast-medium hover:text-contrast-high hover:bg-slate-100 dark:hover:bg-slate-800/50"
                     >
                       <Settings className="w-4 h-4 mr-2" />
                       Settings
@@ -257,7 +257,7 @@ export function ChatSidebar({
               animate={{ opacity: 1 }}
               className="text-center py-8"
             >
-              <div className="flex items-center justify-center space-x-2 text-slate-500 dark:text-slate-400">
+              <div className="flex items-center justify-center space-x-2 text-contrast-medium">
                 <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" />
                 <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
                 <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
@@ -273,17 +273,17 @@ export function ChatSidebar({
               <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <MessageSquare className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+              <h3 className="text-lg font-semibold text-contrast-high mb-2">
                 No conversations yet
               </h3>
-              <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
+              <p className="text-contrast-medium text-sm mb-4">
                 Start a new chat to unleash the power of AI
               </p>
               <Button
                 onClick={handleNewChat}
                 variant="outline"
                 size="sm"
-                className="border-cyan-300 text-cyan-600 hover:bg-cyan-50 dark:border-cyan-700 dark:text-cyan-400 dark:hover:bg-cyan-900/20 transition-all hover:scale-105"
+                className="border-cyan-300 text-cyan-700 hover:bg-cyan-50 dark:border-cyan-700 dark:text-cyan-400 dark:hover:bg-cyan-900/20 transition-all hover:scale-105"
               >
                 <Zap className="w-4 h-4 mr-2" />
                 Start chatting
@@ -302,23 +302,23 @@ export function ChatSidebar({
                     w-full text-left p-4 rounded-xl transition-all duration-300 group
                     ${selectedConversationId === conversation.id
                       ? 'bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/30 dark:to-blue-900/30 border-2 border-cyan-300 dark:border-cyan-700 shadow-lg neon-border-cyan'
-                      : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border-2 border-transparent hover:border-slate-200 dark:hover:border-slate-700'
+                      : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border-2 border-transparent hover:border-slate-300 dark:hover:border-slate-700'
                     }
                   `}
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                    <h3 className="font-semibold text-sm text-contrast-high group-hover:text-cyan-700 dark:group-hover:text-cyan-400 transition-colors truncate">
                       {conversation.title || 'New Chat'}
                     </h3>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 ml-2 flex-shrink-0">
+                    <span className="text-xs text-contrast-low ml-2 flex-shrink-0">
                       {formatDate(conversation.updatedAt)}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 truncate mb-2 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">
+                  <p className="text-xs text-contrast-medium truncate mb-2 group-hover:text-contrast-high transition-colors">
                     {conversation.lastMessage || 'No messages yet'}
                   </p>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-slate-400 dark:text-slate-500">
+                    <span className="text-xs text-contrast-low">
                       {conversation.messageCount} messages
                     </span>
                     {selectedConversationId === conversation.id && (
