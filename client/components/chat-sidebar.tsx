@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { 
   Plus, 
   LogOut, 
@@ -16,7 +17,9 @@ import {
   ChevronDown,
   Settings,
   Crown,
-  MapPin
+  MapPin,
+  Zap,
+  Cpu
 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
@@ -85,10 +88,10 @@ export function ChatSidebar({
     if (!planId) return null
     
     const planColors = {
-      'starter': 'bg-emerald-100 text-emerald-700 border-emerald-200',
-      'unlimited': 'bg-blue-100 text-blue-700 border-blue-200',
-      'saas_pro': 'bg-purple-100 text-purple-700 border-purple-200',
-      'agency': 'bg-orange-100 text-orange-700 border-orange-200'
+      'starter': 'bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700',
+      'unlimited': 'bg-cyan-100 text-cyan-700 border-cyan-300 dark:bg-cyan-900/30 dark:text-cyan-300 dark:border-cyan-700',
+      'saas_pro': 'bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700',
+      'agency': 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-600'
     }
     
     const planNames = {
@@ -99,7 +102,7 @@ export function ChatSidebar({
     }
     
     const planId_lower = planId.toLowerCase()
-    const colorClass = planColors[planId_lower as keyof typeof planColors] || 'bg-gray-100 text-gray-700 border-gray-200'
+    const colorClass = planColors[planId_lower as keyof typeof planColors] || 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-600'
     const planName = planNames[planId_lower as keyof typeof planNames] || planId
     
     return (
@@ -114,24 +117,30 @@ export function ChatSidebar({
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="h-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-slate-700/50 flex flex-col shadow-xl"
+      className="h-full glass-intense backdrop-blur-xl border-r border-slate-300/30 dark:border-slate-700/30 flex flex-col shadow-2xl"
     >
       {/* Header */}
-      <div className="p-6 border-b border-slate-200/50 dark:border-slate-700/50">
+      <div className="p-6 border-b border-slate-300/30 dark:border-slate-700/30">
         <div className="flex items-center justify-between mb-6">
-          <motion.h1 
+          <motion.div 
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
+            className="flex items-center space-x-2"
           >
-            AI Assistant
-          </motion.h1>
+            <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center shadow-lg">
+              <Cpu className="w-4 h-4 text-white" />
+            </div>
+            <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 dark:from-cyan-400 dark:to-blue-400 bg-clip-text text-transparent">
+              AI Assistant
+            </h1>
+          </motion.div>
           
           <div className="flex items-center space-x-2">
+            <ThemeToggle />
             <Button
               onClick={handleNewChat}
               size="sm"
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+              className="btn-gradient-primary hover:scale-105 transition-transform"
             >
               <Plus className="w-4 h-4 mr-1" />
               New
@@ -142,7 +151,7 @@ export function ChatSidebar({
                 onClick={onClose}
                 variant="ghost"
                 size="sm"
-                className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/50"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -159,17 +168,16 @@ export function ChatSidebar({
         >
           <div 
             className={`
-              p-4 rounded-xl bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-700 
-              border border-slate-200/50 dark:border-slate-600/50 cursor-pointer transition-all duration-300
-              hover:shadow-lg hover:scale-[1.02]
-              ${userMenuOpen ? 'shadow-lg scale-[1.02]' : ''}
+              p-4 rounded-xl glass border border-slate-300/30 dark:border-slate-700/30 cursor-pointer transition-all duration-300
+              hover:shadow-medium hover:scale-[1.02] hover:border-cyan-300/50 dark:hover:border-cyan-700/50
+              ${userMenuOpen ? 'shadow-medium scale-[1.02] border-cyan-300/50 dark:border-cyan-700/50' : ''}
             `}
             onClick={() => setUserMenuOpen(!userMenuOpen)}
           >
             <div className="flex items-center space-x-3">
-              <Avatar className="w-12 h-12 ring-2 ring-white/50 shadow-lg">
+              <Avatar className="w-12 h-12 ring-2 ring-cyan-200/50 dark:ring-cyan-800/50 shadow-lg">
                 <AvatarImage src={session?.user?.image || ''} />
-                <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold">
+                <AvatarFallback className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold">
                   {session?.user?.name?.[0] || 'U'}
                 </AvatarFallback>
               </Avatar>
@@ -213,12 +221,12 @@ export function ChatSidebar({
                 transition={{ duration: 0.2 }}
                 className="absolute top-full left-0 right-0 mt-2 z-10"
               >
-                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200/50 dark:border-slate-700/50 overflow-hidden">
+                <div className="glass-intense rounded-xl shadow-2xl border border-slate-300/30 dark:border-slate-700/30 overflow-hidden">
                   <div className="p-2 space-y-1">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100"
+                      className="w-full justify-start text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/50"
                     >
                       <Settings className="w-4 h-4 mr-2" />
                       Settings
@@ -241,7 +249,7 @@ export function ChatSidebar({
       </div>
 
       {/* Conversations List */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 custom-scrollbar">
         <div className="p-4">
           {loading ? (
             <motion.div 
@@ -250,9 +258,9 @@ export function ChatSidebar({
               className="text-center py-8"
             >
               <div className="flex items-center justify-center space-x-2 text-slate-500 dark:text-slate-400">
-                <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                 <span className="text-sm ml-2">Loading conversations...</span>
               </div>
             </motion.div>
@@ -262,22 +270,22 @@ export function ChatSidebar({
               animate={{ opacity: 1, y: 0 }}
               className="text-center py-12"
             >
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <MessageSquare className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+              <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <MessageSquare className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
                 No conversations yet
               </h3>
               <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
-                Start a new chat to begin your AI-powered CRM journey
+                Start a new chat to unleash the power of AI
               </p>
               <Button
                 onClick={handleNewChat}
                 variant="outline"
                 size="sm"
-                className="border-purple-200 text-purple-600 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-400 dark:hover:bg-purple-900/20"
+                className="border-cyan-300 text-cyan-600 hover:bg-cyan-50 dark:border-cyan-700 dark:text-cyan-400 dark:hover:bg-cyan-900/20 transition-all hover:scale-105"
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Zap className="w-4 h-4 mr-2" />
                 Start chatting
               </Button>
             </motion.div>
@@ -293,13 +301,13 @@ export function ChatSidebar({
                   className={`
                     w-full text-left p-4 rounded-xl transition-all duration-300 group
                     ${selectedConversationId === conversation.id
-                      ? 'bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 border-2 border-purple-200 dark:border-purple-700 shadow-lg'
-                      : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border-2 border-transparent'
+                      ? 'bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/30 dark:to-blue-900/30 border-2 border-cyan-300 dark:border-cyan-700 shadow-lg neon-border-cyan'
+                      : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border-2 border-transparent hover:border-slate-200 dark:hover:border-slate-700'
                     }
                   `}
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                    <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
                       {conversation.title || 'New Chat'}
                     </h3>
                     <span className="text-xs text-slate-500 dark:text-slate-400 ml-2 flex-shrink-0">
@@ -315,8 +323,8 @@ export function ChatSidebar({
                     </span>
                     {selectedConversationId === conversation.id && (
                       <div className="flex items-center space-x-1">
-                        <Star className="w-3 h-3 text-purple-500" fill="currentColor" />
-                        <span className="text-xs text-purple-600 dark:text-purple-400 font-medium">Active</span>
+                        <Star className="w-3 h-3 text-cyan-500 pulse-glow-cyan" fill="currentColor" />
+                        <span className="text-xs text-cyan-600 dark:text-cyan-400 font-medium">Active</span>
                       </div>
                     )}
                   </div>

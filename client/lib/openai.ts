@@ -15,6 +15,8 @@ async function initializeAgents() {
   }
 }
 
+// ===== MAIN EXPORT FUNCTION =====
+
 export function getOpenAIAgent(userCtx?: UserContext) {
   console.log('[OPENAI DEBUG] Creating OpenAI agent, API key available:', !!process.env.OPENAI_API_KEY)
   console.log('[OPENAI DEBUG] User context available:', !!userCtx)
@@ -33,7 +35,8 @@ export function getOpenAIAgent(userCtx?: UserContext) {
       }),
       execute: async ({ toolName, parameters = {} }: { toolName: string; parameters?: any }) => {
         try {
-          const tenantId = userCtx.id
+          // CRITICAL FIX: Use locationId (tenant) instead of userId (person) for MCP routing
+          const tenantId = userCtx.locationId
           const response = await fetch(`/api/mcp/${tenantId}/tools/${toolName}`, {
             method: 'POST',
             headers: {
@@ -61,7 +64,7 @@ export function getOpenAIAgent(userCtx?: UserContext) {
       instructions: userCtx?.accessToken 
         ? 'You are a helpful assistant for GoHighLevel users. You can help manage contacts, opportunities, campaigns, and other CRM tasks using the available tools.'
         : 'You are a helpful AI assistant. Note: GoHighLevel CRM tools are not currently available - please sign in with GoHighLevel OAuth to access CRM functionality.',
-      model: 'o3-2025-04-16',
+      model: 'gpt-4.1',
       tools: ghlMcpTool ? [ghlMcpTool] : []
     })
   }
@@ -109,9 +112,9 @@ export function getOpenAIAgent(userCtx?: UserContext) {
     },
 
     async createStreamingChatCompletion(messages: any[]): Promise<any> {
-      console.log('[PROXY DEBUG] Creating streaming completion with OpenAI Agents framework for tenant:', this.userContext?.id);
+      console.log('[PROXY DEBUG] Creating streaming completion with OpenAI Agents framework for tenant:', this.userContext?.locationId);
 
-      if (!this.userContext?.id) {
+      if (!this.userContext?.locationId) {
         // Fallback to basic agent call if no tenant context is available
         console.log('[PROXY DEBUG] No tenant context. Using basic agent.');
         try {
@@ -132,7 +135,7 @@ export function getOpenAIAgent(userCtx?: UserContext) {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-Tenant-ID': this.userContext.id,
+            'X-Tenant-ID': this.userContext.locationId,
           },
           body: JSON.stringify({ 
             message: messages[messages.length - 1].content,
@@ -163,7 +166,7 @@ export function getOpenAIAgent(userCtx?: UserContext) {
       }
       
       try {
-        const tenantId = userCtx.id
+        const tenantId = userCtx.locationId
         const response = await fetch(`/api/mcp/${tenantId}/tools`, {
           method: 'GET',
           headers: {
@@ -190,7 +193,7 @@ export function getOpenAIAgent(userCtx?: UserContext) {
       }
       
       try {
-        const tenantId = userCtx.id
+        const tenantId = userCtx.locationId
         const response = await fetch(`/api/mcp/${tenantId}/tools/${toolName}`, {
           method: 'POST',
           headers: {

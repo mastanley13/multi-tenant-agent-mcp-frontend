@@ -129,10 +129,22 @@ export async function POST(request: NextRequest) {
               console.log('[CHAT DEBUG] Received chunk:', chunk.type)
               
               // Handle different chunk types from OpenAI Agents framework
-              if (chunk.type === 'run_item_stream_event' && chunk.data?.type === 'message' && chunk.data?.content) {
-                const content = chunk.data.content
-                assistantMessage += content
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`))
+              if (chunk.type === 'raw_model_stream_event' && chunk.data?.type === 'model') {
+                // Handle raw model streaming events
+                const event = chunk.data.event
+                if (event?.type === 'response.output_text.delta' && event.delta) {
+                  const content = event.delta
+                  assistantMessage += content
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`))
+                }
+              } else if (chunk.type === 'run_item_stream_event') {
+                // Handle run item events
+                const item = chunk.item
+                if (item?.type === 'message' && item.content) {
+                  const content = item.content
+                  assistantMessage += content
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`))
+                }
               } else if (chunk.type === 'agent_updated_stream_event') {
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify({ status: 'agent_updated' })}\n\n`))
               }
@@ -149,6 +161,12 @@ export async function POST(request: NextRequest) {
             const finalOutput = agentResult?.finalOutput || 'No response generated'
             assistantMessage = finalOutput
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: finalOutput })}\n\n`))
+          }
+
+          // Additional fallback: if no content was streamed, get the final result
+          if (!assistantMessage && streamFromBackend && streamFromBackend.finalOutput) {
+            assistantMessage = streamFromBackend.finalOutput
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: assistantMessage })}\n\n`))
           }
 
           // Save assistant message to database

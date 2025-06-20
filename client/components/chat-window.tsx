@@ -11,14 +11,16 @@ import {
   Menu, 
   Bot, 
   User, 
-  Sparkles, 
+  Zap, 
   Calendar,
   Users,
   DollarSign,
   TrendingUp,
   MessageSquare,
   Clock,
-  Star
+  Star,
+  Cpu,
+  Activity
 } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import ReactMarkdown from 'react-markdown'
@@ -200,7 +202,7 @@ export function ChatWindow({
       icon: Users,
       label: 'Recent Contacts',
       action: 'Show me my recent contacts',
-      color: 'from-blue-500 to-cyan-500'
+      color: 'from-cyan-500 to-blue-500'
     },
     {
       icon: DollarSign,
@@ -212,13 +214,13 @@ export function ChatWindow({
       icon: Calendar,
       label: 'Today\'s Calendar',
       action: 'Show me today\'s appointments',
-      color: 'from-purple-500 to-pink-500'
+      color: 'from-orange-500 to-amber-500'
     },
     {
       icon: TrendingUp,
       label: 'Performance',
       action: 'Show me my business metrics',
-      color: 'from-orange-500 to-red-500'
+      color: 'from-slate-500 to-slate-600'
     }
   ]
 
@@ -230,21 +232,21 @@ export function ChatWindow({
       <motion.div 
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="flex items-center justify-between p-4 lg:p-6 border-b border-slate-200/50 dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl"
+        className="flex items-center justify-between p-4 lg:p-6 border-b border-slate-200/50 dark:border-slate-700/50 glass-intense"
       >
         <div className="flex items-center space-x-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={onToggleSidebar}
-            className="lg:hidden text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+            className="lg:hidden text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/50"
           >
             <Menu className="w-5 h-5" />
           </Button>
           
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center shadow-lg pulse-glow-cyan">
+              <Zap className="w-4 h-4 text-white" />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
@@ -258,7 +260,7 @@ export function ChatWindow({
         </div>
         
         <div className="flex items-center space-x-2">
-          <div className="hidden sm:flex items-center space-x-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-full">
+          <div className="hidden sm:flex items-center space-x-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-full border border-emerald-200/50 dark:border-emerald-800/50">
             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
             <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">Online</span>
           </div>
@@ -266,7 +268,7 @@ export function ChatWindow({
       </motion.div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 px-4 lg:px-6">
+      <ScrollArea className="flex-1 px-4 lg:px-6 custom-scrollbar">
         <div className="space-y-6 max-w-4xl mx-auto py-6">
           {messages.length === 0 && !conversationId && (
             <motion.div 
@@ -280,9 +282,9 @@ export function ChatWindow({
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.2, type: "spring" }}
-                  className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg"
+                  className="w-20 h-20 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl pulse-glow-cyan"
                 >
-                  <Sparkles className="w-10 h-10 text-white" />
+                  <Cpu className="w-10 h-10 text-white" />
                 </motion.div>
                 
                 <motion.h3
@@ -291,7 +293,7 @@ export function ChatWindow({
                   transition={{ delay: 0.3 }}
                   className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2"
                 >
-                  {welcome.greeting}, {welcome.userName}! 👋
+                  {welcome.greeting}, {welcome.userName}! ⚡
                 </motion.h3>
                 
                 <motion.p
@@ -300,8 +302,8 @@ export function ChatWindow({
                   transition={{ delay: 0.4 }}
                   className="text-slate-600 dark:text-slate-400 mb-4 max-w-2xl mx-auto"
                 >
-                  I'm your AI-powered GoHighLevel assistant. I can help you manage contacts, 
-                  analyze your sales pipeline, schedule appointments, and much more.
+                  I'm your cutting-edge AI assistant for GoHighLevel. Ready to supercharge your CRM, 
+                  analyze pipelines, automate workflows, and drive business growth.
                 </motion.p>
                 
                 {(welcome.locationInfo || welcome.planInfo) && (
@@ -312,14 +314,14 @@ export function ChatWindow({
                     className="flex items-center justify-center space-x-4 text-sm text-slate-500 dark:text-slate-400 mb-8"
                   >
                     {welcome.locationInfo && (
-                      <div className="flex items-center space-x-1">
-                        <Star className="w-4 h-4" />
+                      <div className="flex items-center space-x-1 px-3 py-1 bg-slate-100 dark:bg-slate-800/50 rounded-full">
+                        <Activity className="w-4 h-4 text-cyan-500" />
                         <span>{welcome.locationInfo}</span>
                       </div>
                     )}
                     {welcome.planInfo && (
-                      <div className="flex items-center space-x-1">
-                        <Clock className="w-4 h-4" />
+                      <div className="flex items-center space-x-1 px-3 py-1 bg-slate-100 dark:bg-slate-800/50 rounded-full">
+                        <Clock className="w-4 h-4 text-emerald-500" />
                         <span>{welcome.planInfo}</span>
                       </div>
                     )}
@@ -341,9 +343,9 @@ export function ChatWindow({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.7 + index * 0.1 }}
                     onClick={() => setInput(action.action)}
-                    className="group p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                    className="group p-4 glass rounded-xl border border-slate-200/50 dark:border-slate-700/50 hover:border-cyan-300/50 dark:hover:border-cyan-700/50 transition-all duration-300 hover:shadow-medium hover:-translate-y-1 hover:scale-105"
                   >
-                    <div className={`w-12 h-12 bg-gradient-to-r ${action.color} rounded-lg flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform`}>
+                    <div className={`w-12 h-12 bg-gradient-to-r ${action.color} rounded-lg flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform shadow-lg`}>
                       <action.icon className="w-6 h-6 text-white" />
                     </div>
                     <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">
@@ -371,8 +373,8 @@ export function ChatWindow({
               <Avatar className="w-10 h-10 shadow-lg">
                 <AvatarFallback className={
                   message.role === 'user' 
-                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' 
-                    : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white' 
+                    : 'bg-gradient-to-r from-slate-600 to-slate-700 text-white'
                 }>
                   {message.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
                 </AvatarFallback>
@@ -384,12 +386,12 @@ export function ChatWindow({
                 <div
                   className={`px-6 py-4 rounded-2xl shadow-lg ${
                     message.role === 'user'
-                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
-                      : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700'
+                      ? 'chat-bubble-user'
+                      : 'chat-bubble-assistant'
                   }`}
                 >
                   {message.role === 'assistant' ? (
-                    <ReactMarkdown className="prose prose-sm max-w-none dark:prose-invert">
+                    <ReactMarkdown className="prose prose-sm max-w-none dark:prose-invert prose-cyan">
                       {message.content}
                     </ReactMarkdown>
                   ) : (
@@ -418,19 +420,19 @@ export function ChatWindow({
                 className="flex items-start space-x-3"
               >
                 <Avatar className="w-10 h-10 shadow-lg">
-                  <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                  <AvatarFallback className="bg-gradient-to-r from-slate-600 to-slate-700 text-white">
                     <Bot className="w-5 h-5" />
                   </AvatarFallback>
                 </Avatar>
                 <div className="max-w-xs sm:max-w-md lg:max-w-lg xl:max-w-2xl">
-                  <div className="px-6 py-4 rounded-2xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-lg">
-                    <ReactMarkdown className="prose prose-sm max-w-none dark:prose-invert">
+                  <div className="px-6 py-4 rounded-2xl chat-bubble-assistant shadow-lg">
+                    <ReactMarkdown className="prose prose-sm max-w-none dark:prose-invert prose-cyan">
                       {streamingMessage}
                     </ReactMarkdown>
                     <div className="flex items-center space-x-1 mt-2">
-                      <div className="w-1 h-1 bg-purple-500 rounded-full animate-pulse" />
-                      <div className="w-1 h-1 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
-                      <div className="w-1 h-1 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+                      <div className="w-1 h-1 bg-cyan-500 rounded-full animate-pulse" />
+                      <div className="w-1 h-1 bg-cyan-500 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+                      <div className="w-1 h-1 bg-cyan-500 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
                     </div>
                   </div>
                 </div>
@@ -448,13 +450,13 @@ export function ChatWindow({
                 className="flex items-start space-x-3"
               >
                 <Avatar className="w-10 h-10 shadow-lg">
-                  <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                  <AvatarFallback className="bg-gradient-to-r from-slate-600 to-slate-700 text-white">
                     <Bot className="w-5 h-5" />
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex items-center px-6 py-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg">
+                <div className="flex items-center px-6 py-4 rounded-2xl chat-bubble-assistant shadow-lg">
                   <LoadingSpinner size="sm" />
-                  <span className="ml-3 text-sm text-slate-600 dark:text-slate-400">Thinking...</span>
+                  <span className="ml-3 text-sm text-slate-600 dark:text-slate-400">Processing...</span>
                 </div>
               </motion.div>
             )}
@@ -468,7 +470,7 @@ export function ChatWindow({
       <motion.div 
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="p-4 lg:p-6 border-t border-slate-200/50 dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl"
+        className="p-4 lg:p-6 border-t border-slate-200/50 dark:border-slate-700/50 glass-intense"
       >
         <div className="flex items-end space-x-3 max-w-4xl mx-auto">
           <div className="flex-1 relative">
@@ -478,11 +480,11 @@ export function ChatWindow({
               onKeyPress={handleKeyPress}
               placeholder={`Ask me anything about your GoHighLevel account, ${welcome.userName}...`}
               disabled={isLoading}
-              className="min-h-[3rem] px-4 py-3 pr-12 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+              className="input-modern min-h-[3rem] px-4 py-3 pr-12 resize-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/50 transition-all"
             />
             {input && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <kbd className="hidden sm:inline-flex items-center px-2 py-1 bg-slate-100 dark:bg-slate-700 text-xs text-slate-500 dark:text-slate-400 rounded">
+                <kbd className="hidden sm:inline-flex items-center px-2 py-1 bg-slate-100 dark:bg-slate-700 text-xs text-slate-500 dark:text-slate-400 rounded border border-slate-200 dark:border-slate-600">
                   ⏎
                 </kbd>
               </div>
@@ -492,7 +494,7 @@ export function ChatWindow({
           <Button
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
-            className="h-12 px-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-gradient-primary h-12 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
           >
             <Send className="w-5 h-5" />
           </Button>

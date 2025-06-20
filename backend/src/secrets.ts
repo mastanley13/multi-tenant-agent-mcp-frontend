@@ -30,19 +30,21 @@ export interface TenantSecrets {
 async function refreshAccessToken(tenantId: string, refreshToken: string): Promise<TenantSecrets> {
   logger.info(`Refreshing access token for tenant ${tenantId}`);
 
+  // Create form-encoded body as required by GoHighLevel OAuth API
+  const body = new URLSearchParams();
+  body.set('client_id', GHL_CLIENT_ID);
+  body.set('client_secret', GHL_CLIENT_SECRET);
+  body.set('grant_type', 'refresh_token');
+  body.set('refresh_token', refreshToken);
+  body.set('user_type', 'Location');
+
   const response = await fetch('https://services.leadconnectorhq.com/oauth/token', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/x-www-form-urlencoded',
       'Accept': 'application/json',
     },
-    body: JSON.stringify({
-      client_id: GHL_CLIENT_ID,
-      client_secret: GHL_CLIENT_SECRET,
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-      user_type: 'Location',
-    }),
+    body: body,
   });
 
   if (!response.ok) {

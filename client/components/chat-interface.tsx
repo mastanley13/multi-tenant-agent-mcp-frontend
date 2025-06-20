@@ -28,7 +28,7 @@ export function ChatInterface() {
   }, [])
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 bg-mesh">
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {isMobile && sidebarOpen && (
@@ -37,7 +37,7 @@ export function ChatInterface() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -52,7 +52,7 @@ export function ChatInterface() {
             exit={{ x: isMobile ? -320 : 0, opacity: isMobile ? 0 : 1 }}
             transition={{ 
               type: "spring", 
-              stiffness: 300, 
+              stiffness: 400, 
               damping: 30,
               duration: 0.3
             }}
@@ -77,7 +77,7 @@ export function ChatInterface() {
       <motion.div 
         layout
         className="flex-1 flex flex-col min-w-0"
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        transition={{ type: "spring", stiffness: 400, damping: 30 }}
       >
         <ChatWindow
           conversationId={selectedConversationId}

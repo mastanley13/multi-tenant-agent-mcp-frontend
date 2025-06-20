@@ -3,6 +3,31 @@
 These rules govern day-to-day development of the **Multi-Tenant GoHighLevel AI SaaS**.  They complement the technical roadmap in `ROADMAP-TODO.md` and the Cursor workspace rules.
 
 ---
+
+## 🚨 CRITICAL: ROADMAP MANAGEMENT PROTOCOL
+
+### **MANDATORY RULE: NO ROADMAP UPDATES WITHOUT USER APPROVAL**
+**ABSOLUTE REQUIREMENT**: The AI Agent MUST NOT update `ROADMAP-TODO.md` or `ROADMAP-COMPLETED.md` without explicit user approval.
+
+**Violation Consequences**: 
+- Premature completion marking leads to confusion and wasted effort
+- Roadmap accuracy is critical for project management
+- User must validate actual functionality before any completion flags
+
+**Required Process**:
+1. **ASK FIRST**: "May I update the roadmap to reflect [specific change]?"
+2. **WAIT FOR APPROVAL**: Do not proceed until user confirms
+3. **VALIDATE FUNCTIONALITY**: User must test and confirm working functionality
+4. **THEN UPDATE**: Only after user approval and validation
+
+**What Constitutes "Complete"**:
+- ✅ **COMPLETE**: User has tested and confirmed functionality works
+- ❌ **NOT COMPLETE**: Code exists but hasn't been tested by user
+- ❌ **NOT COMPLETE**: Implementation exists but has errors/issues
+- ❌ **NOT COMPLETE**: Agent assumes it works without user validation
+
+---
+
 ## 1  Branch & Commit Hygiene
 1. Branch naming: `feat/<task-id>-<slug>`, `fix/<task-id>-<slug>`, `chore/<scope>`
 2. Use [Conventional Commits](https://www.conventionalcommits.org) with roadmap task-ID in the header, e.g.  
@@ -13,10 +38,10 @@ These rules govern day-to-day development of the **Multi-Tenant GoHighLevel AI S
 A task is ✅ **Done** when:
 1. Code passes `pnpm lint`, `pnpm test`, `tsc --noEmit`.
 2. Unit / integration tests written or updated.
-3. Documentation updated (ROADMAP box checked, README/ADR if needed).
+3. **USER HAS TESTED AND CONFIRMED FUNCTIONALITY WORKS**
 4. No secrets or tokens emitted in logs (verified by CI grep).
 5. PR approved by ≥1 reviewer (pair-programming if solo).
-6. **ROADMAP UPDATED**: Task moved from `ROADMAP-TODO.md` to `ROADMAP-COMPLETED.md` immediately upon completion. 
+6. **ROADMAP UPDATED ONLY AFTER USER APPROVAL**
 7. **NEVER DESIGNATE TIME FRAMES**
 
 ## 3  Security & Secrets
@@ -145,9 +170,9 @@ Please enable Context7 MCP and confirm it's ready for use.
 ```
 
 ## 10  Documentation Cadence & Roadmap Management
-1. **MANDATORY**: Update both `ROADMAP-TODO.md` and `ROADMAP-COMPLETED.md` upon each task completion
-2. **IMMEDIATE**: Move completed tasks from TODO to COMPLETED with timestamp and validation method
-3. **LIVING DOCS**: Keep roadmaps current - they are the source of truth for project status
+1. **MANDATORY USER APPROVAL**: Never update roadmaps without explicit user permission
+2. **FUNCTIONAL VALIDATION**: Tasks only marked complete after user confirms functionality
+3. **LIVING DOCS**: Keep roadmaps current but only with user oversight
 4. Add Architecture Decision Records (ADRs) for impactful infra/security decisions.
 
 ## 11  🚨 CRITICAL: Documentation-First Problem Solving
@@ -217,36 +242,33 @@ If more than 2 repeated issues occur with MCP integration, IMMEDIATELY request s
 **NO IMPLEMENTATION WITHOUT COMPLETED PRE-WORK AUDIT**
 
 ## 14 📋 MANDATORY: Roadmap Management
-**AUTOMATIC UPDATES REQUIRED**: The Agent MUST immediately update roadmaps when:
+**REQUIRES USER APPROVAL**: The Agent MUST ask for permission before updating roadmaps:
 
-### **Task Completion**
-- [ ] Move completed task from `ROADMAP-TODO.md` to `ROADMAP-COMPLETED.md`
-- [ ] Add completion date, validation method, and notes
-- [ ] Update status dashboard in TODO roadmap
-- [ ] Check off acceptance criteria
-- [ ] Document which MCPs were used for validation
+### **Before Any Roadmap Update**
+- [ ] Ask user: "May I update the roadmap to reflect [specific change]?"
+- [ ] Wait for explicit user approval
+- [ ] Only proceed after user confirms permission
 
-### **Task Start**
-- [ ] Update task status to "In Progress" in TODO roadmap
-- [ ] Complete pre-work audit checklist
+### **Task Completion Protocol**
+- [ ] User must test and validate functionality works
+- [ ] User must confirm task is actually complete
+- [ ] Only then ask permission to move task to completed roadmap
+- [ ] Update with user-confirmed validation method and notes
+
+### **Task Status Updates**
+- [ ] Ask permission before changing any task status
 - [ ] Document any blockers or dependencies discovered
-- [ ] Update estimated effort if needed
+- [ ] Update estimated effort only with user approval
 - [ ] List required MCPs for the task
 
-### **Priority Changes**
-- [ ] Immediately update priority levels in TODO roadmap
-- [ ] Reorganize task order if needed
-- [ ] Update status dashboard
-- [ ] Document reason for priority change
-
-### **New Tasks Discovered**
-- [ ] Add new tasks to TODO roadmap with proper formatting
+### **New Task Discovery**
+- [ ] Ask permission before adding new tasks to roadmap
 - [ ] Include pre-work audit requirements
-- [ ] Set appropriate priority level
+- [ ] Set appropriate priority level with user input
 - [ ] Link to dependent tasks
 - [ ] Specify required MCPs
 
-**Rationale**: Living roadmaps prevent the restart cycles we've experienced and keep everyone aligned on current state and next steps.
+**Rationale**: User oversight prevents premature completion marking and maintains roadmap accuracy for project management.
 
 ## 15 🎯 CRITICAL: MCP-Enhanced Development Process
 **MANDATORY WORKFLOW**: For any development work, the Agent MUST:
@@ -271,4 +293,4 @@ If more than 2 repeated issues occur with MCP integration, IMMEDIATELY request s
 - Always test MCP connectivity before critical operations
 
 ---
-**Last updated:** December 19, 2024 - Added comprehensive MCP management protocols and dual roadmap maintenance
+**Last updated:** December 19, 2024 - Added MANDATORY roadmap approval protocol and functional validation requirements

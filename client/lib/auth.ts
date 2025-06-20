@@ -21,16 +21,18 @@ export const authOptions: NextAuthOptions = {
   adapter: {
     ...PrismaAdapter(prisma),
     async createUser(user: any) {
-      // Use locationId as the primary identifier for GoHighLevel users
-      const ghlUserId = user.id || `ghl_${user.locationId || Date.now()}`
+      // CORRECT FIX: Use actual GHL userId for user identity
+      const actualUserId = user.ghlUserId || user.id
+      
+      console.log('[AUTH DEBUG] Creating user with actual GHL userId:', actualUserId, 'for location:', user.locationId)
       
       return await prisma.user.create({
         data: {
-          id: ghlUserId,
+          id: actualUserId,
           name: user.name || 'GoHighLevel User',
           email: user.email,
           image: user.image,
-          locationId: user.locationId,
+          locationId: user.locationId, // Current location context
         },
       })
     },
@@ -91,7 +93,7 @@ export const authOptions: NextAuthOptions = {
               // Map GHL specific fields for NextAuth
               locationId: tokens.locationId,
               companyId: tokens.companyId,
-              userId: tokens.userId || tokens.locationId || `ghl_${Date.now()}`, // Fallback to locationId or timestamp
+              userId: tokens.userId, // Actual GHL userId (the person)
               planId: tokens.planId,
               userType: tokens.userType,
               approvedLocations: tokens.approvedLocations
@@ -103,32 +105,34 @@ export const authOptions: NextAuthOptions = {
         async request(context) {
           // Extract user info from the token response
           const locationId = context.tokens.locationId as string
-          const userId = (context.tokens.userId as string) || locationId || `ghl_${Date.now()}`
+          const actualUserId = context.tokens.userId as string
           
-          console.log('[AUTH DEBUG] Userinfo context tokens:', context.tokens)
+          console.log('[AUTH DEBUG] Userinfo - actualUserId:', actualUserId, 'locationId:', locationId)
           
           return {
-            sub: userId,
+            sub: actualUserId, // Use actual GHL userId
             name: 'GoHighLevel User',
             email: undefined,
             locationId: locationId,
+            ghlUserId: actualUserId,
           }
         }
       },
       clientId: process.env.GHL_CLIENT_ID,
       clientSecret: process.env.GHL_CLIENT_SECRET,
       profile(profile, tokens) {
-        // Extract userId from tokens response - use locationId as fallback
-        const ghlUserId = profile.sub || tokens.userId || tokens.locationId || `ghl_${Date.now()}`
+        // Use actual GHL userId for user identity
+        const actualUserId = tokens.userId || profile.ghlUserId || profile.sub
         
-        console.log('[AUTH DEBUG] Profile mapping:', { profile, tokens, ghlUserId })
+        console.log('[AUTH DEBUG] Profile mapping - actualUserId:', actualUserId, 'locationId:', tokens.locationId)
         
         return {
-          id: ghlUserId,
+          id: actualUserId,
           name: profile.name || 'GoHighLevel User',
           email: profile.email,
           image: null,
           locationId: profile.locationId || tokens.locationId,
+          ghlUserId: actualUserId,
         }
       },
       // Configure OAuth client settings
@@ -143,30 +147,18 @@ export const authOptions: NextAuthOptions = {
       
       // Store OAuth tokens and GoHighLevel specific data
       if (account) {
-        // Map GHL specific fields and ensure proper account ID
-        const accountId = account.userId || account.locationId || `ghl_${Date.now()}`
-        
-        // Ensure providerAccountId is set properly
-        if (!account.providerAccountId) {
-          account.providerAccountId = accountId
-        }
-        
         token.accessToken = account.access_token
         token.refreshToken = account.refresh_token
         token.expiresAt = account.expires_at
         token.locationId = account.locationId
         token.companyId = account.companyId
-        // Store the actual GHL userId but use sub as the primary identifier
-        token.ghlUserId = account.userId  // Keep the original GHL userId for reference
-        token.userId = token.sub  // Use sub as the primary userId for consistency
+        token.ghlUserId = account.userId // Actual GHL userId
         token.planId = account.planId
         token.userType = account.userType
         token.approvedLocations = account.approvedLocations
-      }
-      
-      // Ensure we always have a user ID that matches the sub
-      if (!token.userId && token.sub) {
-        token.userId = token.sub
+        
+        // CRITICAL FIX: Override sub to use actual GHL userId for consistency
+        token.sub = account.userId || user?.id
       }
       
       return token
@@ -182,8 +174,8 @@ export const authOptions: NextAuthOptions = {
       session.userType = token.userType as string
       session.approvedLocations = (token.approvedLocations as string[]) || []
       
-      // Use the sub (subject) as the user ID, which is what was used to create the user in the database
-      session.user.id = token.sub as string
+      // CRITICAL FIX: Use actual GHL userId, not the legacy sub
+      session.user.id = token.ghlUserId as string || token.sub as string
       
       return session
     },
@@ -191,41 +183,38 @@ export const authOptions: NextAuthOptions = {
       console.log('[AUTH DEBUG] SignIn callback:', { account, profile, user })
       
       if (account?.provider === "oauth") {
-        try {
-          // The account object now has the proper GHL fields from our custom token handler
-          const ghlUserId = account.userId
-          
-          // Update the user object with the correct ID
-          if (ghlUserId && user) {
-            user.id = ghlUserId
-          }
-          
-          // --- A-4: Upsert TenantSecret row --------------------------------------------------
+        try {          
+          // --- CRITICAL FIX: Create TenantSecret per LOCATION, not per USER ---
           try {
             if (account.access_token && account.locationId) {
+              // TENANT = LOCATION (sub-account)
+              const tenantId = account.locationId
+              
+              console.log('[AUTH DEBUG] Creating TenantSecret for TENANT (location):', tenantId, 'accessed by user:', user.id)
+              
               await prisma.tenantSecret.upsert({
-                where: { tenantId: user.id },
+                where: { tenantId },
                 update: {
                   accessToken: account.access_token,
                   refreshToken: account.refresh_token ?? undefined,
                   expiresAt: account.expires_at ?? undefined,
                   locationId: account.locationId,
                   companyId: account.companyId ?? undefined,
-                  ghlUserId: account.providerAccountId ?? undefined,
+                  ghlUserId: account.userId ?? undefined, // For reference, but tenant is the location
                   userType: account.userType ?? undefined,
                 },
                 create: {
-                  tenantId: user.id,
+                  tenantId, // tenantId = locationId (the sub-account)
                   accessToken: account.access_token,
                   refreshToken: account.refresh_token ?? undefined,
                   expiresAt: account.expires_at ?? undefined,
                   locationId: account.locationId,
                   companyId: account.companyId ?? undefined,
-                  ghlUserId: account.providerAccountId ?? undefined,
+                  ghlUserId: account.userId ?? undefined,
                   userType: account.userType ?? undefined,
                 },
               })
-              console.log('[AUTH DEBUG] TenantSecret upserted')
+              console.log('[AUTH DEBUG] TenantSecret upserted for location/tenant:', tenantId)
             }
           } catch (err) {
             console.error('Failed to upsert TenantSecret:', err)

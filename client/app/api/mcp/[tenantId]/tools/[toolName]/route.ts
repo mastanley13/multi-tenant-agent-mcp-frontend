@@ -7,9 +7,19 @@ export async function POST(
   { params }: { params: Promise<{ tenantId: string; toolName: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    // Check for Authorization header first (for OpenAI Agent calls)
+    const authHeader = request.headers.get('Authorization')
+    let accessToken: string | null = null
     
-    if (!session?.accessToken) {
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      accessToken = authHeader.substring(7) // Remove 'Bearer ' prefix
+    } else {
+      // Fallback to session-based auth (for direct browser calls)
+      const session = await getServerSession(authOptions)
+      accessToken = session?.accessToken || null
+    }
+    
+    if (!accessToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -22,7 +32,7 @@ export async function POST(
       method: 'POST',
       headers: {
         'x-tenant-id': tenantId,
-        'Authorization': `Bearer ${session.accessToken}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
