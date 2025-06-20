@@ -176,7 +176,7 @@ export function ChatSidebar({
               
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2 mb-1">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 break-words flex-1">
                     {session?.user?.name || 'User'}
                   </p>
                   {session?.planId && getPlanBadge(session.planId)}
@@ -185,16 +185,16 @@ export function ChatSidebar({
                 <div className="flex items-center space-x-1 text-xs text-slate-600 dark:text-slate-400">
                   {session?.locationId && (
                     <>
-                      <MapPin className="w-3 h-3" />
-                      <span className="truncate">ID: {session.locationId.slice(-8)}</span>
+                      <MapPin className="w-3 h-3 flex-shrink-0" />
+                      <span className="break-all">ID: {session.locationId.slice(-8)}</span>
                     </>
                   )}
                 </div>
                 
                 {session?.companyId && (
                   <div className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-500 mt-1">
-                    <Building2 className="w-3 h-3" />
-                    <span className="truncate">Company: {session.companyId.slice(-8)}</span>
+                    <Building2 className="w-3 h-3 flex-shrink-0" />
+                    <span className="break-all">Company: {session.companyId.slice(-8)}</span>
                   </div>
                 )}
               </div>
@@ -241,8 +241,8 @@ export function ChatSidebar({
       </div>
 
       {/* Conversations List */}
-      <ScrollArea className="flex-1">
-        <div className="p-4">
+      <ScrollArea className="flex-1 px-2">
+        <div className="py-4 px-2">
           {loading ? (
             <motion.div 
               initial={{ opacity: 0 }}
@@ -282,7 +282,7 @@ export function ChatSidebar({
               </Button>
             </motion.div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {conversations.map((conversation, index) => (
                 <motion.button
                   key={conversation.id}
@@ -291,22 +291,22 @@ export function ChatSidebar({
                   transition={{ delay: index * 0.05 }}
                   onClick={() => handleSelectConversation(conversation.id)}
                   className={`
-                    w-full text-left p-4 rounded-xl transition-all duration-300 group
+                    w-full text-left p-4 rounded-xl transition-all duration-300 group min-h-[6rem]
                     ${selectedConversationId === conversation.id
                       ? 'bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 border-2 border-purple-200 dark:border-purple-700 shadow-lg'
                       : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border-2 border-transparent'
                     }
                   `}
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 break-words flex-1 mr-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors leading-relaxed">
                       {conversation.title || 'New Chat'}
                     </h3>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 ml-2 flex-shrink-0">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 flex-shrink-0 whitespace-nowrap">
                       {formatDate(conversation.updatedAt)}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 truncate mb-2 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 break-words mb-3 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors leading-relaxed line-clamp-2 min-h-[2.5rem]">
                     {conversation.lastMessage || 'No messages yet'}
                   </p>
                   <div className="flex justify-between items-center">
