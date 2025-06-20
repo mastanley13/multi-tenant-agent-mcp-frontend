@@ -117,20 +117,21 @@ export function ChatSidebar({
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="h-full w-full overflow-hidden glass-intense backdrop-blur-xl border-r border-slate-300/30 dark:border-slate-700/30 flex flex-col shadow-2xl"
+      className="h-full w-full max-w-full overflow-hidden glass-intense backdrop-blur-xl border-r border-slate-300/30 dark:border-slate-700/30 flex flex-col shadow-2xl"
+      style={{ width: '320px', maxWidth: '320px' }}
     >
       {/* Header */}
-      <div className="p-6 border-b border-slate-300/30 dark:border-slate-700/30 min-w-0">
-        <div className="flex items-center justify-between mb-6">
+      <div className="p-6 border-b border-slate-300/30 dark:border-slate-700/30 min-w-0 w-full max-w-full overflow-hidden">
+        <div className="flex items-center justify-between mb-6 min-w-0">
           <motion.div 
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="flex items-center space-x-2 min-w-0 flex-1"
+            className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden"
           >
             <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
               <Cpu className="w-4 h-4 text-white" />
             </div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 dark:from-cyan-400 dark:to-blue-400 bg-clip-text text-transparent truncate">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 dark:from-cyan-400 dark:to-blue-400 bg-clip-text text-transparent truncate min-w-0">
               AI Assistant
             </h1>
           </motion.div>
@@ -164,17 +165,17 @@ export function ChatSidebar({
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="relative min-w-0"
+          className="relative min-w-0 w-full max-w-full"
         >
           <div 
             className={`
-              p-4 rounded-xl glass border border-slate-300/30 dark:border-slate-700/30 cursor-pointer transition-all duration-300 min-w-0 overflow-hidden
+              p-4 rounded-xl glass border border-slate-300/30 dark:border-slate-700/30 cursor-pointer transition-all duration-300 min-w-0 overflow-hidden w-full max-w-full
               hover:shadow-medium hover:scale-[1.02] hover:border-cyan-300/50 dark:hover:border-cyan-700/50
               ${userMenuOpen ? 'shadow-medium scale-[1.02] border-cyan-300/50 dark:border-cyan-700/50' : ''}
             `}
             onClick={() => setUserMenuOpen(!userMenuOpen)}
           >
-            <div className="flex items-center space-x-3 min-w-0">
+            <div className="flex items-center space-x-3 min-w-0 w-full max-w-full overflow-hidden">
               <Avatar className="w-12 h-12 ring-2 ring-cyan-200/50 dark:ring-cyan-800/50 shadow-lg flex-shrink-0">
                 <AvatarImage src={session?.user?.image || ''} />
                 <AvatarFallback className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold">
@@ -182,9 +183,9 @@ export function ChatSidebar({
                 </AvatarFallback>
               </Avatar>
               
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <div className="flex items-center space-x-2 mb-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate min-w-0">
+              <div className="flex-1 min-w-0 overflow-hidden max-w-full" style={{ wordBreak: 'break-word' }}>
+                <div className="flex items-center space-x-2 mb-1 min-w-0 max-w-full overflow-hidden">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate min-w-0 flex-1" style={{ wordBreak: 'break-word' }}>
                     {session?.user?.name || 'User'}
                   </p>
                   {session?.planId && (
@@ -194,19 +195,19 @@ export function ChatSidebar({
                   )}
                 </div>
                 
-                <div className="flex items-center space-x-1 text-xs text-slate-600 dark:text-slate-400 min-w-0">
+                <div className="flex items-center space-x-1 text-xs text-slate-600 dark:text-slate-400 min-w-0 max-w-full overflow-hidden">
                   {session?.locationId && (
                     <>
                       <MapPin className="w-3 h-3 flex-shrink-0" />
-                      <span className="truncate min-w-0">ID: {session.locationId.slice(-8)}</span>
+                      <span className="truncate min-w-0 flex-1" style={{ wordBreak: 'break-all' }}>ID: {session.locationId.slice(-8)}</span>
                     </>
                   )}
                 </div>
                 
                 {session?.companyId && (
-                  <div className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-500 mt-1 min-w-0">
+                  <div className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-500 mt-1 min-w-0 max-w-full overflow-hidden">
                     <Building2 className="w-3 h-3 flex-shrink-0" />
-                    <span className="truncate min-w-0">Company: {session.companyId.slice(-8)}</span>
+                    <span className="truncate min-w-0 flex-1" style={{ wordBreak: 'break-all' }}>Company: {session.companyId.slice(-8)}</span>
                   </div>
                 )}
               </div>
@@ -223,26 +224,26 @@ export function ChatSidebar({
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
-                className="absolute top-full left-0 right-0 mt-2 z-10 min-w-0"
+                className="absolute top-full left-0 right-0 mt-2 z-10 min-w-0 max-w-full"
               >
                 <div className="glass-intense rounded-xl shadow-2xl border border-slate-300/30 dark:border-slate-700/30 overflow-hidden">
                   <div className="p-2 space-y-1">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/50 min-w-0"
+                      className="w-full justify-start text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/50 min-w-0 max-w-full overflow-hidden"
                     >
                       <Settings className="w-4 h-4 mr-2 flex-shrink-0" />
-                      <span className="truncate">Settings</span>
+                      <span className="truncate min-w-0">Settings</span>
                     </Button>
                     <Button
                       onClick={() => signOut()}
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 min-w-0"
+                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 min-w-0 max-w-full overflow-hidden"
                     >
                       <LogOut className="w-4 h-4 mr-2 flex-shrink-0" />
-                      <span className="truncate">Sign out</span>
+                      <span className="truncate min-w-0">Sign out</span>
                     </Button>
                   </div>
                 </div>
@@ -253,8 +254,8 @@ export function ChatSidebar({
       </div>
 
       {/* Conversations List */}
-      <ScrollArea className="flex-1 custom-scrollbar min-w-0">
-        <div className="p-4 min-w-0">
+      <ScrollArea className="flex-1 custom-scrollbar min-w-0 w-full max-w-full overflow-hidden">
+        <div className="p-4 min-w-0 w-full max-w-full overflow-hidden">
           {loading ? (
             <motion.div 
               initial={{ opacity: 0 }}
@@ -294,7 +295,7 @@ export function ChatSidebar({
               </Button>
             </motion.div>
           ) : (
-            <div className="space-y-2 min-w-0">
+            <div className="space-y-2 min-w-0 w-full max-w-full overflow-hidden">
               {conversations.map((conversation, index) => (
                 <motion.button
                   key={conversation.id}
@@ -303,30 +304,31 @@ export function ChatSidebar({
                   transition={{ delay: index * 0.05 }}
                   onClick={() => handleSelectConversation(conversation.id)}
                   className={`
-                    w-full text-left p-4 rounded-xl transition-all duration-300 group min-w-0 overflow-hidden
+                    w-full text-left p-4 rounded-xl transition-all duration-300 group min-w-0 overflow-hidden max-w-full
                     ${selectedConversationId === conversation.id
                       ? 'bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/30 dark:to-blue-900/30 border-2 border-cyan-300 dark:border-cyan-700 shadow-lg neon-border-cyan'
                       : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border-2 border-transparent hover:border-slate-200 dark:hover:border-slate-700'
                     }
                   `}
+                  style={{ wordBreak: 'break-word' }}
                 >
-                  <div className="flex justify-between items-start mb-2 min-w-0">
-                    <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors min-w-0 flex-1 pr-2">
+                  <div className="flex justify-between items-start mb-2 min-w-0 w-full max-w-full overflow-hidden">
+                    <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors min-w-0 flex-1 pr-2 max-w-full" style={{ wordBreak: 'break-word' }}>
                       {conversation.title || 'New Chat'}
                     </h3>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 flex-shrink-0">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 flex-shrink-0 whitespace-nowrap">
                       {formatDate(conversation.updatedAt)}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 truncate mb-2 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors min-w-0">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 truncate mb-2 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors min-w-0 w-full max-w-full" style={{ wordBreak: 'break-word' }}>
                     {conversation.lastMessage || 'No messages yet'}
                   </p>
-                  <div className="flex justify-between items-center min-w-0">
-                    <span className="text-xs text-slate-400 dark:text-slate-500 truncate min-w-0 flex-1">
+                  <div className="flex justify-between items-center min-w-0 w-full max-w-full overflow-hidden">
+                    <span className="text-xs text-slate-400 dark:text-slate-500 truncate min-w-0 flex-1 max-w-full" style={{ wordBreak: 'break-word' }}>
                       {conversation.messageCount} messages
                     </span>
                     {selectedConversationId === conversation.id && (
-                      <div className="flex items-center space-x-1 flex-shrink-0">
+                      <div className="flex items-center space-x-1 flex-shrink-0 whitespace-nowrap">
                         <Star className="w-3 h-3 text-cyan-500 pulse-glow-cyan" fill="currentColor" />
                         <span className="text-xs text-cyan-600 dark:text-cyan-400 font-medium">Active</span>
                       </div>
