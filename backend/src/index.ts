@@ -30,7 +30,7 @@ const io = new SocketIOServer(server, {
   },
 })
 
-const PORT = process.env.BACKEND_PORT || 3001
+const PORT = process.env.PORT || process.env.BACKEND_PORT || 3001
 
 app.use(helmet({ contentSecurityPolicy: false }))
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:3000', credentials: true }))
