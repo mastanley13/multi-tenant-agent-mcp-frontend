@@ -38,13 +38,15 @@ interface ChatWindowProps {
   onToggleSidebar: () => void
   sidebarOpen: boolean
   session?: Session | null
+  onConversationUpdate?: (conversationId: string) => void
 }
 
 export function ChatWindow({
   conversationId,
   onToggleSidebar,
   sidebarOpen,
-  session
+  session,
+  onConversationUpdate
 }: ChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -156,6 +158,11 @@ export function ChatWindow({
                 if (parsed.content) {
                   streamingContent += parsed.content
                   setStreamingMessage(streamingContent)
+                }
+                
+                // Capture conversation ID from completion event
+                if (parsed.status === 'completed' && parsed.conversationId && onConversationUpdate) {
+                  onConversationUpdate(parsed.conversationId)
                 }
               } catch (e) {
                 // Ignore parse errors for malformed chunks
