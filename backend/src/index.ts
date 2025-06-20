@@ -62,18 +62,6 @@ async function getAgentForTenant(tenantId: string) {
   const cached = agents.get(tenantId)
   if (cached) return cached.agent
 
-  // In development, avoid spawning MCP and just return a stub Agent with no tools.
-  if (process.env.NODE_ENV === 'development') {
-    const devAgent = new Agent({
-      name: `Stub Agent (${tenantId})`,
-      instructions: 'Dev-mode stub agent without MCP tools.',
-      model: 'o3-2025-04-16',
-      tools: [],
-    })
-    agents.set(tenantId, { agent: devAgent, mcpServerPath: 'stub', toolsCount: 0 })
-    return devAgent
-  }
-
   const mcp = await getProcess(tenantId)
   // Build tools list (cached inside Agent to avoid re-fetch each call)
   const tools = await withTrace('load-tools', () => getAllMcpTools([mcp], false))

@@ -110,13 +110,6 @@ export async function getTenantSecrets(tenantId: string): Promise<TenantSecrets>
 
   // --- Handle case where TenantSecret does not exist ---
 
-  if (process.env.NODE_ENV === 'development') {
-    return {
-      accessToken: 'stub-token',
-      locationId: 'stub-loc',
-    }
-  }
-
   // Fallback: look for OAuth account row to bootstrap TenantSecret
   const account = await prisma.account.findFirst({
     where: {

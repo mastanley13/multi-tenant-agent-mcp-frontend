@@ -27,14 +27,14 @@ export async function getProcess(tenantId: string): Promise<MCPServerStdio> {
 
   const { accessToken, locationId } = await getTenantSecrets(tenantId)
 
-  const procPath = process.env.GHL_MCP_PATH || (process.env.NODE_ENV === 'development' ? `${__dirname}/../stub-mcp.js` : undefined)
+  const procPath = process.env.GHL_MCP_PATH || (process.env.NODE_ENV === 'development' ? `${__dirname}/../mcp-src/dist/server.js` : `${__dirname}/../mcp-src/dist/server.js`)
 
   const proc = new MCPServerStdio({
     name: `GHL-MCP-${tenantId}`,
     command: 'node',
-    args: [procPath ?? '/app/ghl-mcp-server/dist/server.js'],
+    args: [procPath],
     env: {
-      GHL_ACCESS_TOKEN: accessToken,
+      GHL_API_KEY: accessToken,
       GHL_LOCATION_ID: locationId,
       GHL_BASE_URL: process.env.GHL_BASE_URL || 'https://services.leadconnectorhq.com',
       NODE_ENV: process.env.NODE_ENV || 'production',
