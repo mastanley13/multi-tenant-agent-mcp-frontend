@@ -250,88 +250,106 @@ export function ChatSidebar({
 
       {/* Conversations List */}
       <ScrollArea className="flex-1 custom-scrollbar">
-        <div className="p-4">
-          {loading ? (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-8"
-            >
-              <div className="flex items-center justify-center space-x-2 text-slate-500 dark:text-slate-400">
-                <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                <span className="text-sm ml-2">Loading conversations...</span>
-              </div>
-            </motion.div>
-          ) : conversations.length === 0 ? (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-12"
-            >
-              <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <MessageSquare className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                No conversations yet
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
-                Start a new chat to unleash the power of AI
-              </p>
-              <Button
-                onClick={handleNewChat}
-                variant="outline"
-                size="sm"
-                className="border-cyan-300 text-cyan-600 hover:bg-cyan-50 dark:border-cyan-700 dark:text-cyan-400 dark:hover:bg-cyan-900/20 transition-all hover:scale-105"
+        <div className="px-4 pt-6 pb-4">
+          {/* Chat History Header */}
+          <div className="mb-4">
+            <h2 className="text-sm font-medium text-slate-600 dark:text-slate-400 px-2">
+              Recent Conversations
+            </h2>
+          </div>
+          
+          {/* Chat History Container */}
+          <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl p-3 border border-slate-200/50 dark:border-slate-700/50 shadow-inner">
+            {loading ? (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-8"
               >
-                <Zap className="w-4 h-4 mr-2" />
-                Start chatting
-              </Button>
-            </motion.div>
-          ) : (
-            <div className="space-y-2">
-              {conversations.map((conversation, index) => (
-                <motion.button
-                  key={conversation.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  onClick={() => handleSelectConversation(conversation.id)}
-                  className={`
-                    w-full text-left p-4 rounded-xl transition-all duration-300 group
-                    ${selectedConversationId === conversation.id
-                      ? 'bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/30 dark:to-blue-900/30 border-2 border-cyan-300 dark:border-cyan-700 shadow-lg neon-border-cyan'
-                      : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border-2 border-transparent hover:border-slate-200 dark:hover:border-slate-700'
-                    }
-                  `}
+                <div className="flex items-center justify-center space-x-2 text-slate-500 dark:text-slate-400">
+                  <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" />
+                  <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                  <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                  <span className="text-sm ml-2">Loading conversations...</span>
+                </div>
+              </motion.div>
+            ) : conversations.length === 0 ? (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-12"
+              >
+                <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <MessageSquare className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  No conversations yet
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
+                  Start a new chat to unleash the power of AI
+                </p>
+                <Button
+                  onClick={handleNewChat}
+                  variant="outline"
+                  size="sm"
+                  className="border-cyan-300 text-cyan-600 hover:bg-cyan-50 dark:border-cyan-700 dark:text-cyan-400 dark:hover:bg-cyan-900/20 transition-all hover:scale-105"
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
-                      {conversation.title || 'New Chat'}
-                    </h3>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 ml-2 flex-shrink-0">
-                      {formatDate(conversation.updatedAt)}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 truncate mb-2 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">
-                    {conversation.lastMessage || 'No messages yet'}
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-slate-400 dark:text-slate-500">
-                      {conversation.messageCount} messages
-                    </span>
+                  <Zap className="w-4 h-4 mr-2" />
+                  Start chatting
+                </Button>
+              </motion.div>
+            ) : (
+              <div className="space-y-2">
+                {conversations.map((conversation, index) => (
+                  <motion.button
+                    key={conversation.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    onClick={() => handleSelectConversation(conversation.id)}
+                    className={`
+                      w-full text-left p-3 rounded-xl transition-all duration-300 group relative
+                      backdrop-blur-sm border shadow-sm hover:shadow-md
+                      ${selectedConversationId === conversation.id
+                        ? 'bg-gradient-to-r from-white to-cyan-50 dark:from-slate-800 dark:to-cyan-900/30 border-cyan-300/60 dark:border-cyan-600/50 shadow-md shadow-cyan-500/10 dark:shadow-cyan-400/10'
+                        : 'bg-white/70 dark:bg-slate-800/50 border-slate-200/50 dark:border-slate-600/50 hover:bg-white dark:hover:bg-slate-800/70 hover:border-slate-300/60 dark:hover:border-slate-500/60'
+                      }
+                    `}
+                  >
+                    {/* Subtle glow effect for selected */}
                     {selectedConversationId === conversation.id && (
-                      <div className="flex items-center space-x-1">
-                        <Star className="w-3 h-3 text-cyan-500 pulse-glow-cyan" fill="currentColor" />
-                        <span className="text-xs text-cyan-600 dark:text-cyan-400 font-medium">Active</span>
-                      </div>
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-400/10 to-blue-400/10 dark:from-cyan-500/20 dark:to-blue-500/20 pointer-events-none" />
                     )}
-                  </div>
-                </motion.button>
-              ))}
-            </div>
-          )}
+                    
+                    <div className="relative z-10">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-medium text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-cyan-700 dark:group-hover:text-cyan-300 transition-colors">
+                          {conversation.title || 'New Chat'}
+                        </h3>
+                        <span className="text-xs text-slate-500 dark:text-slate-400 ml-2 flex-shrink-0">
+                          {formatDate(conversation.updatedAt)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 truncate mb-2 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">
+                        {conversation.lastMessage || 'No messages yet'}
+                      </p>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-500 dark:text-slate-500">
+                          {conversation.messageCount} messages
+                        </span>
+                        {selectedConversationId === conversation.id && (
+                          <div className="flex items-center space-x-1">
+                            <Star className="w-3 h-3 text-cyan-600 dark:text-cyan-400" fill="currentColor" />
+                            <span className="text-xs text-cyan-700 dark:text-cyan-300 font-medium">Active</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </ScrollArea>
     </motion.div>
