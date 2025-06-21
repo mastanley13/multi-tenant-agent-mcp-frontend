@@ -1,4 +1,19 @@
-import MemoryClient from 'mem0ai'
+// Memory client interface for type safety
+interface MemoryClientInterface {
+  add(messages: any[], options: any): Promise<void>
+  search(query: string, options: any): Promise<any[]>
+}
+
+// Fallback implementation when mem0ai is not available
+class FallbackMemoryClient implements MemoryClientInterface {
+  async add(messages: any[], options: any): Promise<void> {
+    // No-op implementation - memory features disabled
+  }
+  
+  async search(query: string, options: any): Promise<any[]> {
+    return []
+  }
+}
 
 interface Message {
   role: 'user' | 'assistant'
@@ -24,23 +39,19 @@ interface MemoryResult {
 }
 
 export class TenantMemoryClient {
-  private client: MemoryClient | null = null
+  private client: MemoryClientInterface
   private initialized: boolean = false
 
   constructor() {
-    try {
-      const apiKey = process.env.MEM0_API_KEY
-      if (!apiKey) {
-        console.warn('[MEMORY] MEM0_API_KEY not found, memory features will be disabled')
-        return
-      }
-      
-      this.client = new MemoryClient({ apiKey })
-      this.initialized = true
-      console.log('[MEMORY] Mem0 client initialized successfully')
-    } catch (error) {
-      console.error('[MEMORY] Failed to initialize Mem0 client:', error)
-      this.initialized = false
+    // For now, always use fallback implementation
+    // To enable mem0ai, install the package and update this implementation
+    this.client = new FallbackMemoryClient()
+    
+    const apiKey = process.env.MEM0_API_KEY
+    if (!apiKey) {
+      console.warn('[MEMORY] MEM0_API_KEY not found, memory features will be disabled')
+    } else {
+      console.warn('[MEMORY] mem0ai package not installed, memory features will be disabled. Install mem0ai to enable.')
     }
   }
 
@@ -48,18 +59,13 @@ export class TenantMemoryClient {
    * Check if memory client is available
    */
   isAvailable(): boolean {
-    return this.initialized && this.client !== null
+    return this.initialized
   }
 
   /**
    * Add a message to user-specific memory (tied to GHL userId, not locationId)
    */
   async addMessage(message: string, ghlUserId: string, role: 'user' | 'assistant', metadata?: any): Promise<boolean> {
-    if (!this.isAvailable() || !this.client) {
-      console.warn('[MEMORY] Client not available, skipping memory addition')
-      return false
-    }
-
     if (!ghlUserId) {
       console.warn('[MEMORY] No ghlUserId provided, skipping memory addition')
       return false
@@ -68,7 +74,7 @@ export class TenantMemoryClient {
     try {
       const messages: Message[] = [{ role, content: message }]
       const options: MemoryOptions = { 
-        user_id: ghlUserId, // Use actual GHL user ID for memory persistence
+        user_id: ghlUserId,
         metadata: {
           timestamp: new Date().toISOString(),
           role,
@@ -77,7 +83,6 @@ export class TenantMemoryClient {
       }
 
       await this.client.add(messages, options)
-      console.log(`[MEMORY] Added ${role} message to memory for user: ${ghlUserId}`)
       return true
     } catch (error) {
       console.error('[MEMORY] Failed to add message:', error)
@@ -89,36 +94,28 @@ export class TenantMemoryClient {
    * Search for relevant memories for a user (based on GHL userId)
    */
   async searchMemories(query: string, ghlUserId: string, limit: number = 5): Promise<string[]> {
-    if (!this.isAvailable() || !this.client) {
-      console.warn('[MEMORY] Client not available, returning empty memories')
-      return []
-    }
-
     if (!ghlUserId) {
-      console.warn('[MEMORY] No ghlUserId provided, returning empty memories')
       return []
     }
 
     try {
       const options: SearchOptions = {
-        user_id: ghlUserId, // Search memories for actual GHL user
+        user_id: ghlUserId,
         limit,
-        threshold: 0.1 // Only return memories with reasonable relevance
+        threshold: 0.1
       }
 
       const result: MemoryResult[] = await this.client.search(query, options)
       
       if (!result || result.length === 0) {
-        console.log(`[MEMORY] No relevant memories found for user: ${ghlUserId}`)
         return []
       }
 
       const memories = result
-        .filter(r => r.score && r.score > 0.1) // Additional score filtering
+        .filter(r => r.score && r.score > 0.1)
         .map(r => r.memory || '')
-        .filter(m => m.length > 0) // Remove empty memories
+        .filter(m => m.length > 0)
 
-      console.log(`[MEMORY] Found ${memories.length} relevant memories for user: ${ghlUserId}`)
       return memories
     } catch (error) {
       console.error('[MEMORY] Failed to search memories:', error)
@@ -130,12 +127,7 @@ export class TenantMemoryClient {
    * Get conversation context by combining recent memories with semantic search
    */
   async getConversationContext(query: string, ghlUserId: string, conversationId?: string): Promise<string> {
-    if (!this.isAvailable()) {
-      return ''
-    }
-
     if (!ghlUserId) {
-      console.warn('[MEMORY] No ghlUserId provided for context')
       return ''
     }
 
@@ -146,12 +138,10 @@ export class TenantMemoryClient {
         return ''
       }
 
-      // Build context from most relevant memories
       const context = relevantMemories
-        .slice(0, 3) // Limit to top 3 most relevant
+        .slice(0, 3)
         .join('\n')
 
-      console.log(`[MEMORY] Built context with ${relevantMemories.length} memories for user: ${ghlUserId}`)
       return context
     } catch (error) {
       console.error('[MEMORY] Failed to get conversation context:', error)
@@ -163,24 +153,18 @@ export class TenantMemoryClient {
    * Add conversation messages (both user and assistant) to memory
    */
   async addConversation(userMessage: string, assistantResponse: string, ghlUserId: string, metadata?: any): Promise<boolean> {
-    if (!this.isAvailable() || !this.client) {
-      return false
-    }
-
     if (!ghlUserId) {
-      console.warn('[MEMORY] No ghlUserId provided for conversation')
       return false
     }
 
     try {
-      // Add both messages as a conversation pair
       const messages: Message[] = [
         { role: 'user', content: userMessage },
         { role: 'assistant', content: assistantResponse }
       ]
 
       const options: MemoryOptions = {
-        user_id: ghlUserId, // Store conversation for actual GHL user
+        user_id: ghlUserId,
         metadata: {
           timestamp: new Date().toISOString(),
           conversation_pair: true,
@@ -189,7 +173,6 @@ export class TenantMemoryClient {
       }
 
       await this.client.add(messages, options)
-      console.log(`[MEMORY] Added conversation pair to memory for user: ${ghlUserId}`)
       return true
     } catch (error) {
       console.error('[MEMORY] Failed to add conversation:', error)

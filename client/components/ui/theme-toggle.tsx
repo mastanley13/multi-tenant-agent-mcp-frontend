@@ -28,59 +28,38 @@ export function ThemeToggle() {
   const nextTheme = themes[(currentThemeIndex + 1) % themes.length]
 
   return (
-    <div className="relative">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setTheme(nextTheme.name)}
-        className="relative h-10 w-10 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-soft hover:shadow-medium transition-all duration-300 hover:scale-105 group"
-      >
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={theme}
-            initial={{ y: -20, opacity: 0, rotate: -90 }}
-            animate={{ y: 0, opacity: 1, rotate: 0 }}
-            exit={{ y: 20, opacity: 0, rotate: 90 }}
-            transition={{ duration: 0.2 }}
-            className="absolute inset-0 flex items-center justify-center"
-          >
-            {theme === "light" && (
-              <Sun className="h-4 w-4 text-orange-500 group-hover:text-orange-600 transition-colors" />
-            )}
-            {theme === "dark" && (
-              <Moon className="h-4 w-4 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
-            )}
-            {theme === "system" && (
-              <Monitor className="h-4 w-4 text-emerald-500 group-hover:text-emerald-400 transition-colors" />
-            )}
-          </motion.div>
-        </AnimatePresence>
-        
-        {/* Glow effect */}
-        <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => setTheme(nextTheme.name)}
+      className="relative h-9 w-9 rounded-lg bg-background border border-border shadow-soft hover:shadow-medium transition-all duration-200 hover:bg-accent/10"
+      title={`Switch to ${nextTheme.label}`}
+    >
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={theme}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{ duration: 0.15 }}
+          className="flex items-center justify-center"
+        >
           {theme === "light" && (
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-200/20 to-yellow-200/20" />
+            <Sun className="h-4 w-4 text-warning" />
           )}
           {theme === "dark" && (
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-200/20 to-blue-200/20" />
+            <Moon className="h-4 w-4 text-primary" />
           )}
           {theme === "system" && (
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-200/20 to-green-200/20" />
+            <Monitor className="h-4 w-4 text-accent" />
           )}
-        </div>
-      </Button>
-      
-      {/* Tooltip */}
-      <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-        <div className="bg-slate-900 dark:bg-slate-700 text-white text-xs px-2 py-1 rounded-md whitespace-nowrap">
-          Switch to {nextTheme.label}
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </AnimatePresence>
+    </Button>
   )
 }
 
-// Alternative compact version for mobile/smaller spaces
+// Clean compact version for mobile/smaller spaces
 export function ThemeToggleCompact() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
@@ -98,25 +77,19 @@ export function ThemeToggleCompact() {
   return (
     <button
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="theme-toggle"
+      className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2 bg-muted hover:bg-muted/80"
       aria-label="Toggle theme"
     >
       <motion.span
-        className="theme-toggle-thumb"
-        animate={{ x: isDark ? 28 : 4 }}
-        transition={{ type: "spring", stiffness: 700, damping: 30 }}
+        className="inline-block h-4 w-4 transform rounded-full bg-background shadow-sm transition-transform flex items-center justify-center"
+        animate={{ x: isDark ? 26 : 2 }}
+        transition={{ type: "spring", stiffness: 500, damping: 30 }}
       >
-        <motion.div
-          className="w-full h-full flex items-center justify-center"
-          animate={{ rotate: isDark ? 180 : 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {isDark ? (
-            <Moon className="w-2.5 h-2.5 text-slate-600" />
-          ) : (
-            <Sun className="w-2.5 h-2.5 text-orange-500" />
-          )}
-        </motion.div>
+        {isDark ? (
+          <Moon className="w-2.5 h-2.5 text-primary" />
+        ) : (
+          <Sun className="w-2.5 h-2.5 text-warning" />
+        )}
       </motion.span>
     </button>
   )
